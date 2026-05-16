@@ -1585,37 +1585,23 @@ function downloadSignatureImage() {
     </div>
   `;
   
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.width = '700px';
-  container.style.background = 'white';
-  container.style.zIndex = '-9999';
-  container.style.padding = '40px';
-  container.innerHTML = signatureImageContent;
-  document.body.appendChild(container);
-  
+  const element = document.createElement('div');
+  element.innerHTML = signatureImageContent;
+  element.style.width = '700px';
+  element.style.background = 'white';
+
   const opt = {
-    margin: 10,
+    margin: 5,
     filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { 
-      scale: 1.5, 
-      useCORS: true, 
-      logging: false,
-      width: 700,
-      windowWidth: 700
-    },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, windowWidth: 700 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  // Wait for rendering
+  html2pdf().set(opt).from(element).save();
+  
   setTimeout(() => {
-    html2pdf().set(opt).from(container).save().then(() => {
-      document.body.removeChild(container);
-      document.getElementById('signAnotherBtn').style.display = 'block';
-    });
+    document.getElementById('signAnotherBtn').style.display = 'block';
   }, 500);
 }
 
@@ -1673,34 +1659,20 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
     </div>
   `;
   
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.width = '700px';
-  container.style.background = 'white';
-  container.style.zIndex = '-9999';
-  container.innerHTML = signatureOnlyContent;
-  document.body.appendChild(container);
-  
+  const element = document.createElement('div');
+  element.innerHTML = signatureOnlyContent;
+  element.style.width = '700px';
+  element.style.background = 'white';
+
   const opt = {
     margin: 10,
     filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { 
-      scale: 1.5, 
-      useCORS: true,
-      width: 700,
-      windowWidth: 700
-    },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, windowWidth: 700 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  setTimeout(() => {
-    html2pdf().set(opt).from(container).save().then(() => {
-      document.body.removeChild(container);
-    });
-  }, 500);
+  html2pdf().set(opt).from(element).save();
 }
 
 // ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
@@ -1787,34 +1759,23 @@ function downloadPDF() {
   `;
   
   // Generate PDF
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.width = '750px';
-  container.style.background = 'white';
-  container.style.zIndex = '-9999';
-  container.innerHTML = htmlContent;
-  document.body.appendChild(container);
-  
+  const element = document.createElement('div');
+  element.innerHTML = htmlContent;
+  element.style.width = '800px';
+  element.style.background = 'white';
+
   const opt = {
     margin: 10,
     filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { 
-      scale: 1.5, 
-      useCORS: true,
-      width: 750,
-      windowWidth: 750
-    },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, windowWidth: 800 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
+  html2pdf().set(opt).from(element).save();
+  
   setTimeout(() => {
-    html2pdf().set(opt).from(container).save().then(() => {
-      document.body.removeChild(container);
-      document.getElementById('signAnotherBtn').style.display = 'block';
-    });
+    document.getElementById('signAnotherBtn').style.display = 'block';
   }, 500);
 }
 function restartApp() {
