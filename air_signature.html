@@ -33,6 +33,9 @@
     overflow-y: auto;
     overflow-x: hidden;
   }
+  body.no-scroll {
+    overflow: hidden !important;
+  }
 
   /* ── HEADER ── */
   header {
@@ -1615,7 +1618,7 @@ function downloadSignatureImage() {
       margin: 10,
       filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 750 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 750, scrollY: 0, scrollX: 0 },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
 
@@ -1691,7 +1694,7 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
       margin: 10,
       filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, windowWidth: 750, width: 750, useCORS: true },
+      html2canvas: { scale: 2, windowWidth: 750, width: 750, useCORS: true, scrollY: 0, scrollX: 0 },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
 
@@ -1793,7 +1796,7 @@ function downloadPDF() {
       margin: 10,
       filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, windowWidth: 750, width: 750, useCORS: true },
+      html2canvas: { scale: 2, windowWidth: 750, width: 750, useCORS: true, scrollY: 0, scrollX: 0 },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
 
@@ -2158,10 +2161,12 @@ async function startCamera() {
 // Modal functions
 function openModal(modalId) {
   document.getElementById(modalId).classList.add('show');
+  document.body.classList.add('no-scroll');
 }
 
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('show');
+  document.body.classList.remove('no-scroll');
 }
 
 // Close modal when clicking outside content
@@ -2174,6 +2179,7 @@ window.addEventListener('click', (e) => {
 // ── FORM MODAL FUNCTIONS ──
 function openFormModal() {
   const formModal = document.getElementById('formModal');
+  document.body.classList.add('no-scroll');
   const today = new Date();
   const day = String(today.getDate()).padStart(2, '0');
   const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -2191,6 +2197,7 @@ function openFormModal() {
 
 function closeFormModal() {
   document.getElementById('formModal').classList.remove('show');
+  document.body.classList.remove('no-scroll');
 }
 
 function submitFormModal(type) {
