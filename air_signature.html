@@ -1602,23 +1602,14 @@ function downloadSignatureImage() {
   signatureImage.src = state.sigDataUrl;
   
   signatureImage.onload = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = signatureImage.width;
-    canvas.height = signatureImage.height;
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(signatureImage, 0, 0);
-    const finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-
     const safeContent = `
-      <div style="width: 750px; background: white; text-align: center;">
-        <img src="${finalDataUrl}" style="width: 100%; max-height: 95vh; display: block; margin: 0 auto;">
+      <div style="width: 750px; background: white; padding: 100px 25px; text-align: center; box-sizing: border-box;">
+        <img src="${state.sigDataUrl}" style="width: 700px; height: auto; display: block; margin: 0 auto;">
       </div>
     `;
 
     const opt = {
-      margin: 0,
+      margin: 10,
       filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 750, scrollY: 0, scrollX: 0 },
