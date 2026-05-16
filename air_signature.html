@@ -1598,6 +1598,7 @@ function submitForm() {
     <strong>Signing duration:</strong> ${duration}s
   `;
   document.getElementById('successOverlay').classList.add('show');
+  document.body.classList.add('no-scroll');
 }
 
 // ─── DOWNLOAD SIGNATURE IMAGE ONLY (NO TEXT) ─────────────
@@ -1803,6 +1804,7 @@ function downloadPDF() {
 }
 function restartApp() {
   document.getElementById('successOverlay').classList.remove('show');
+  document.body.classList.remove('no-scroll');
   document.getElementById('fieldName').value = '';
   document.getElementById('fieldEmail').value = '';
   document.getElementById('fieldCompany').value = '';
