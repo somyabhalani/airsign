@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>AirSign — Sign With Your Hand</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -1019,7 +1020,9 @@
 
 <!-- PERMISSION SCREEN -->
 <div id="permScreen">
-  <div class="perm-icon">✋</div>
+  <div class="perm-logo" style="margin-bottom: 20px;">
+    <img src="favicon.png" style="height: 80px; width: auto; border-radius: 12px;">
+  </div>
   <div class="perm-title">AirSign</div>
   <div class="perm-sub">Sign any document in the air using just your index finger. No stylus. No touchscreen. Just your hand.</div>
   <button class="perm-btn" onclick="startCamera()">Allow Camera & Begin</button>
