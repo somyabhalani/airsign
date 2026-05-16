@@ -727,397 +727,164 @@
 
     /* ── MOBILE HEADER ── */
     header {
-      padding: 0 10px;
-      height: 54px;
-      gap: 6px;
+      padding: 0 16px;
+      height: 60px;
+      gap: 8px;
       position: fixed;
       top: 0;
       z-index: 100;
-      align-items: center;
-      overflow: hidden;
+      background: rgba(245,243,238,0.95);
+      backdrop-filter: blur(20px);
     }
     .logo {
-      font-size: 13px;
-      flex: 0 0 auto;
+      font-size: 16px;
     }
     .badge {
-      font-size: 8px;
-      padding: 1px 6px;
-      flex: 0 0 auto;
+      font-size: 9px;
+      padding: 2px 6px;
     }
-    header > div[style*="Ananta Labs"] {
-      display: none;
-    }
-    header > div[style*="All rights reserved"] {
-      display: none;
-    }
-    .header-links {
-      display: none;
+    .header-brand, .header-rights, .header-links {
+      display: none !important;
     }
     .header-status {
-      font-size: 9px;
-      gap: 4px;
+      font-size: 10px;
+      gap: 5px;
       margin-left: auto;
-      min-width: 0;
-      max-width: 44vw;
+      background: rgba(0,0,0,0.03);
+      padding: 4px 10px;
+      border-radius: 20px;
     }
 
-    /* ── MOBILE MAIN LAYOUT - SINGLE COLUMN ── */
+    /* ── MOBILE MAIN LAYOUT ── */
     main {
       display: flex;
       flex-direction: column;
       height: auto;
       min-height: 100vh;
-      padding-top: 48px;
-      padding-bottom: 140px;
+      padding-top: 60px;
+      padding-bottom: 0; /* Footer handles bottom spacing */
     }
 
     /* ── MOBILE CAM PANEL ── */
     .cam-panel {
-      padding: 16px 12px;
-      gap: 12px;
+      padding: 24px 16px;
+      gap: 16px;
       background: var(--cam-bg);
       border-bottom: 1px solid rgba(255,255,255,0.05);
-      justify-content: flex-start;
       min-height: auto;
-      overflow: visible;
-    }
-    .cam-panel::before {
-      display: none;
     }
     .cam-label {
-      font-size: 9px;
+      font-size: 10px;
+      opacity: 0.6;
     }
     .cam-container {
       max-width: 100%;
       aspect-ratio: 4/3;
-      border-radius: 12px;
-      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
     /* ── MOBILE OVERLAY TEXT ── */
     .cam-overlay-text {
-      font-size: 10px;
-      padding: 4px 10px;
-      bottom: 8px;
-    }
-
-    /* ── MOBILE CANVAS ── */
-    #trackingCanvas, #sigCanvas {
-      width: 100%;
-      height: 100%;
+      font-size: 11px;
+      padding: 6px 14px;
+      bottom: 12px;
+      width: 85%;
+      text-align: center;
     }
 
     /* ── MOBILE FORM PANEL ── */
     .form-panel {
-      padding: 20px 16px 16px;
-      gap: 0;
-      overflow: visible;
-      max-height: none;
-      height: auto;
-      flex: 1;
+      padding: 32px 20px;
       background: var(--paper);
     }
-
     .doc-header {
-      margin-bottom: 16px;
-      padding-bottom: 12px;
+      margin-bottom: 24px;
     }
     .doc-title {
-      font-size: 18px;
+      font-size: 20px;
     }
     .doc-subtitle {
-      font-size: 12px;
+      font-size: 13px;
     }
 
-    /* ── MOBILE FORM GROUPS ── */
-    .form-group {
-      margin-bottom: 14px;
-    }
-    label {
-      font-size: 11px;
-      margin-bottom: 5px;
-    }
-    input[type="text"], input[type="email"], input[type="date"] {
-      font-size: 14px;
-      padding: 10px 12px;
-      border-radius: 8px;
-    }
-    
     .form-row {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
-    .form-row > * {
-      width: 100%;
-    }
-
-    /* ── MOBILE INSTRUCTION CARDS ── */
-    .instruction-cards {
-      display: none;
-    }
-    .instruction-card {
-      display: none;
+      gap: 0;
     }
 
     /* ── MOBILE SIGNATURE BOX ── */
-    .sig-section {
-      margin-bottom: 16px;
-    }
-    .sig-section label {
-      font-size: 11px;
-      margin-bottom: 6px;
-      display: block;
-    }
     .sig-box {
-      height: 120px;
-      border-radius: 8px;
-      border: 2px solid var(--border);
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fafaf8;
-      text-align: center;
-      padding: 12px;
-    }
-    .sig-box.signed {
-      border-color: var(--success);
-      background: #f0fdf4;
-    }
-    .sig-placeholder {
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--muted);
-      max-width: 85%;
-    }
-
-    /* ── MOBILE AGREEMENT BOX ── */
-    .agreement-box {
+      height: 140px;
       background: #fff;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 14px;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    /* ── MOBILE CHECKBOX ── */
-    .checkbox-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      margin-top: 2px;
-      flex-shrink: 0;
-    }
-    .checkbox-label {
-      font-size: 12px;
-      color: var(--ink);
-      cursor: pointer;
-      line-height: 1.4;
+      border-radius: 12px;
     }
 
     /* ── MOBILE BUTTONS ── */
     .cam-controls {
-      max-width: 100%;
-      gap: 8px;
-      margin-top: 8px;
+      width: 100%;
+      gap: 10px;
+      margin-top: 4px;
     }
-    .cam-controls .btn {
-      padding: 10px 8px;
-      font-size: 11px;
-      min-height: 40px;
+    .btn {
+      min-height: 46px;
+      font-size: 13px;
+      border-radius: 12px;
     }
-    
     .submit-btn {
-      width: 100%;
-      padding: 12px;
-      font-size: 13px;
-      min-height: 44px;
-      border-radius: 8px;
-      margin-top: 8px;
-      touch-action: manipulation;
-    }
-
-    /* ── MOBILE SUCCESS OVERLAY ── */
-    .success-overlay {
-      padding: 16px;
-      max-height: 90vh;
-      overflow-y: auto;
+      min-height: 54px;
+      font-size: 15px;
       border-radius: 12px;
-      max-width: 95%;
-    }
-    .success-overlay h2 {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-    .success-overlay p {
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-    .success-meta {
-      font-size: 11px;
-      gap: 6px;
-    }
-    .success-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .success-buttons .btn {
-      width: 100%;
-      padding: 12px;
-      font-size: 12px;
-      min-height: 44px;
-    }
-
-    /* ── MOBILE MODALS ── */
-    .modal-content {
-      max-width: 95%;
-      width: 95%;
-      max-height: 85vh;
-      border-radius: 12px;
-    }
-    .modal-header {
-      padding: 12px;
-    }
-    .modal-title {
-      font-size: 16px;
-    }
-    .modal-close {
-      font-size: 20px;
-      width: 28px;
-      height: 28px;
-    }
-    .modal-body {
-      font-size: 12px;
-      line-height: 1.6;
-      padding: 12px;
-    }
-    .modal-body h3 {
-      font-size: 13px;
-      margin-top: 12px;
-      margin-bottom: 6px;
-    }
-    .modal-body p {
-      margin-bottom: 8px;
-    }
-    .modal-body ul {
-      margin-left: 16px;
-    }
-    .modal-body li {
-      margin-left: 0;
-      margin-bottom: 6px;
-      font-size: 11px;
-    }
-
-    /* ── MOBILE FORM POPUP MODAL ── */
-    #formModal {
-      align-items: flex-end;
-    }
-    .form-modal-content {
-      border-radius: 16px 16px 0 0;
-      width: 100%;
-      max-width: 100%;
-      padding: 20px 16px 16px;
-      max-height: 85vh;
-    }
-    .form-modal-header {
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-    }
-    .form-modal-title {
-      font-size: 18px;
-    }
-    .form-modal-body {
-      gap: 12px;
-    }
-    .form-modal-body .form-group {
-      margin-bottom: 10px;
-    }
-    .form-modal-body label {
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-    .form-modal-body input {
-      font-size: 14px;
-      padding: 10px 12px;
-    }
-    .form-modal-body .agreement-box {
-      padding: 10px;
-      font-size: 11px;
-      margin-bottom: 10px;
-    }
-    .form-modal-buttons {
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 12px;
-    }
-    .form-modal-buttons .btn {
-      padding: 10px;
-      font-size: 12px;
-      min-height: 44px;
+      margin-top: 10px;
     }
 
     /* ── MOBILE FOOTER ── */
     footer {
-      position: static;
-      padding: 12px;
-      background: var(--paper);
+      padding: 40px 20px;
+      background: #fff;
       border-top: 1px solid var(--border);
+      display: flex;
       flex-direction: column;
-      gap: 8px;
-      z-index: 99;
-      margin-top: 20px;
-      width: 100%;
-    }
-    .footer-credit {
-      font-size: 9px;
+      align-items: center;
+      gap: 20px;
       text-align: center;
     }
     .footer-links {
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+      width: 100%;
+      max-width: 300px;
     }
     .footer-link {
-      font-size: 9px;
-      padding: 4px 6px;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .footer-credit {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      width: 100%;
     }
 
-    /* ── MOBILE PERMISSION SCREEN ── */
-    #permScreen {
-      height: 100vh;
-      padding: 20px;
+    /* ── MOBILE SUCCESS OVERLAY ── */
+    #successOverlay {
+      padding: 30px 20px;
     }
-    .perm-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+    .success-title {
+      font-size: 24px;
     }
-    .perm-title {
-      font-size: 20px;
-      margin-bottom: 8px;
+    .success-sub {
+      font-size: 14px;
     }
-    .perm-sub {
-      font-size: 12px;
-      margin-bottom: 16px;
-      max-width: 90%;
-    }
-    .perm-btn {
+    .restart-btn {
       width: 100%;
-      padding: 12px;
-      font-size: 13px;
-      min-height: 44px;
-      border-radius: 8px;
+      min-height: 48px;
     }
   }
 
@@ -1250,14 +1017,14 @@
 <header>
   <div class="logo">Air<span>Sign</span></div>
   <div class="badge">Beta</div>
-  <div style="font-size: 12px; font-weight: 600; color: #8b8b99; margin-left: 8px; letter-spacing: 0.05em;">Ananta Labs</div>
+  <div class="header-brand" style="font-size: 12px; font-weight: 600; color: #8b8b99; margin-left: 8px; letter-spacing: 0.05em;">Ananta Labs</div>
   <div class="header-links">
     <a class="header-link" onclick="openModal('privacyModal')">Privacy</a>
     <a class="header-link" onclick="openModal('termsModal')">Terms</a>
     <a class="header-link" onclick="openModal('howtoModal')">How to Use</a>
     <a class="header-link" onclick="openModal('contactModal')">Contact</a>
   </div>
-  <div style="font-size: 11px; color: #8b8b99; margin-left: auto; margin-right: 15px;">© 2026 All rights reserved. Ananta Labs</div>
+  <div class="header-rights" style="font-size: 11px; color: #8b8b99; margin-left: auto; margin-right: 15px;">© 2026 All rights reserved. Ananta Labs</div>
   <div class="header-status">
     <div class="status-dot" id="statusDot"></div>
     <span id="statusText">Waiting for camera</span>
