@@ -1831,20 +1831,7 @@ function downloadPDF() {
   }, 1000);
 }
 function restartApp() {
-  document.getElementById('successOverlay').classList.remove('show');
-  document.body.classList.remove('no-scroll');
-  document.getElementById('fieldName').value = '';
-  document.getElementById('fieldEmail').value = '';
-  document.getElementById('fieldCompany').value = '';
-  // Keep date as today in Indian format
-  const today = new Date();
-  const indianDate = String(today.getDate()).padStart(2, '0') + '/' + 
-                     String(today.getMonth() + 1).padStart(2, '0') + '/' + 
-                     today.getFullYear();
-  document.getElementById('fieldDate').value = indianDate;
-  document.getElementById('agreeCheck').checked = false;
-  document.getElementById('signAnotherBtn').style.display = 'none';
-  clearSignature();
+  window.location.reload();
 }
 
 // ─── START CAMERA ─────────────────────────────────────────
