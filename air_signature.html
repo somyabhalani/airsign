@@ -1614,11 +1614,18 @@ function downloadSignatureImage() {
       </div>
     `;
 
+    const isMobile = window.innerWidth <= 768;
     const opt = {
       margin: 10,
       filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 750, scrollY: 0, scrollX: 0 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        scrollY: 0, 
+        scrollX: 0,
+        ...(isMobile ? { windowWidth: 750, width: 750 } : {})
+      },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
 
@@ -1786,11 +1793,18 @@ function downloadPDF() {
   signatureImage.onload = () => {
     const safeContent = `<div style="width: 750px; background: white; color: black; padding: 40px; box-sizing: border-box;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
     
+    const isMobile = window.innerWidth <= 768;
     const opt = {
       margin: 10,
       filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, windowWidth: 750, width: 750, useCORS: true, scrollY: 0, scrollX: 0 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        scrollY: 0, 
+        scrollX: 0,
+        ...(isMobile ? { windowWidth: 750, width: 750 } : {})
+      },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
 
