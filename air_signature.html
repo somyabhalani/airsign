@@ -1633,7 +1633,7 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
   const submitTime = new Date().toLocaleString();
   
   const signatureOnlyContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; text-align: center;">
+    <div style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: white;">
       <!-- Header -->
       <div style="margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
         <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 24px;">Digital Signature</h1>
@@ -1712,7 +1712,7 @@ function downloadPDF() {
   
   // Create HTML content for PDF
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
+    <div style="font-family: Arial, sans-serif; padding: 40px; background: white;">
       <!-- Header -->
       <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
         <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 28px;">AirSign Digital Agreement</h1>
