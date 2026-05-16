@@ -1585,22 +1585,38 @@ function downloadSignatureImage() {
     </div>
   `;
   
-  const styledContent = `<div style="width: 700px; background: white; padding: 20px;">${signatureImageContent}</div>`;
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '700px';
+  container.style.background = 'white';
+  container.style.zIndex = '-9999';
+  container.style.padding = '40px';
+  container.innerHTML = signatureImageContent;
+  document.body.appendChild(container);
   
   const opt = {
-    margin: 5,
+    margin: 10,
     filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { 
+      scale: 1.5, 
+      useCORS: true, 
+      logging: false,
+      width: 700,
+      windowWidth: 700
+    },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(styledContent).save();
-  
-  // Show Sign Another button after download
+  // Wait for rendering
   setTimeout(() => {
-    document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 1000);
+    html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+      document.getElementById('signAnotherBtn').style.display = 'block';
+    });
+  }, 500);
 }
 
 // ─── DOWNLOAD SIGNATURE ONLY PDF ─────────────────────────
@@ -1657,17 +1673,34 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
     </div>
   `;
   
-  const styledContent = `<div style="width: 700px; background: white;">${signatureOnlyContent}</div>`;
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '700px';
+  container.style.background = 'white';
+  container.style.zIndex = '-9999';
+  container.innerHTML = signatureOnlyContent;
+  document.body.appendChild(container);
   
   const opt = {
     margin: 10,
     filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { 
+      scale: 1.5, 
+      useCORS: true,
+      width: 700,
+      windowWidth: 700
+    },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(styledContent).save();
+  setTimeout(() => {
+    html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+    });
+  }, 500);
 }
 
 // ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
@@ -1754,22 +1787,35 @@ function downloadPDF() {
   `;
   
   // Generate PDF
-  const styledContent = `<div style="width: 750px; background: white;">${htmlContent}</div>`;
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '750px';
+  container.style.background = 'white';
+  container.style.zIndex = '-9999';
+  container.innerHTML = htmlContent;
+  document.body.appendChild(container);
   
   const opt = {
     margin: 10,
     filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { 
+      scale: 1.5, 
+      useCORS: true,
+      width: 750,
+      windowWidth: 750
+    },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(styledContent).save();
-  
-  // Show Sign Another button after PDF download starts
   setTimeout(() => {
-    document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 1000);
+    html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+      document.getElementById('signAnotherBtn').style.display = 'block';
+    });
+  }, 500);
 }
 function restartApp() {
   document.getElementById('successOverlay').classList.remove('show');
