@@ -1612,20 +1612,13 @@ function downloadSignatureImage() {
     const finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
     const safeContent = `
-      <div style="width: 750px; background: white; padding: 50px; text-align: center; border: 1px solid #eee; box-sizing: border-box;">
-        <h2 style="color: #0a0a0f; margin-bottom: 30px;">Digital Signature Image</h2>
-        <div style="border: 2px solid #2563ff; padding: 20px; background: #fff; display: inline-block;">
-          <img src="${finalDataUrl}" style="width: 500px; height: auto;">
-        </div>
-        <div style="margin-top: 40px; color: #8b8b99; font-size: 14px;">
-          Signer: ${name}<br>
-          Captured via AirSign
-        </div>
+      <div style="width: 750px; background: white; text-align: center;">
+        <img src="${finalDataUrl}" style="width: 100%; max-height: 95vh; display: block; margin: 0 auto;">
       </div>
     `;
 
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 750, scrollY: 0, scrollX: 0 },
