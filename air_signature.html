@@ -1121,9 +1121,14 @@
       <div class="sig-hint">⚡ Use your index finger in the air — click "Use Signature" when done</div>
     </div>
 
-    <button class="submit-btn" id="submitBtn" onclick="submitForm()" disabled>
-      Submit Signed Document →
-    </button>
+    <div class="form-actions" style="margin-top: 20px;">
+      <button class="btn primary" id="submitBtn" onclick="submitForm()" disabled style="width: 100%;">
+        <span>📥 Submit Full Document</span>
+      </button>
+      <button class="btn" id="submitSignOnlyBtn" onclick="downloadSignatureImage()" disabled style="width: 100%; background: #16a34a; color: white; border: 1px solid #16a34a; margin-top: 10px;">
+        <span>✍️ Download Signature Only</span>
+      </button>
+    </div>
   </div>
 </main>
 
@@ -1525,8 +1530,8 @@ function clearSignature() {
   startBtn.style.display = 'none';
   pauseBtn.style.display = 'none';
   pauseBtn.textContent = '⏸ Pause';
-  doneBtn.disabled = true;
   submitBtn.disabled = true;
+  document.getElementById('submitSignOnlyBtn').disabled = true;
 }
 
 // ─── FORM VALIDATION ─────────────────────────────────────
@@ -1534,7 +1539,9 @@ function checkFormReady() {
   const name = document.getElementById('fieldName').value.trim();
   const email = document.getElementById('fieldEmail').value.trim();
   const agreed = document.getElementById('agreeCheck').checked;
-  submitBtn.disabled = !(name && email && agreed && state.isSigned);
+  const isReady = !!(name && email && agreed && state.isSigned);
+  submitBtn.disabled = !isReady;
+  document.getElementById('submitSignOnlyBtn').disabled = !isReady;
 }
 
 document.getElementById('fieldName').addEventListener('input', checkFormReady);
