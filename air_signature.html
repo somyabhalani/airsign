@@ -194,6 +194,7 @@
     white-space: nowrap;
     border: 1px solid rgba(255,255,255,0.08);
     transition: opacity 0.3s;
+    z-index: 5;
   }
 
   .fingertip-dot {
@@ -784,6 +785,13 @@
       width: 100%;
     }
 
+    /* ── MOBILE OVERLAY TEXT ── */
+    .cam-overlay-text {
+      font-size: 10px;
+      padding: 4px 10px;
+      bottom: 8px;
+    }
+
     /* ── MOBILE CANVAS ── */
     #trackingCanvas, #sigCanvas {
       width: 100%;
@@ -1185,6 +1193,9 @@
       display: none;
     }
     .instruction-card {
+      display: none;
+    }
+    .cam-overlay-text {
       display: none;
     }
   }
