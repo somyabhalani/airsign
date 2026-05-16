@@ -727,29 +727,39 @@
 
     /* ── MOBILE HEADER ── */
     header {
-      padding: 0 12px;
-      height: 48px;
-      gap: 8px;
+      padding: 0 10px;
+      height: 54px;
+      gap: 6px;
       position: fixed;
       top: 0;
       z-index: 100;
+      align-items: center;
+      overflow: hidden;
     }
     .logo {
-      font-size: 14px;
+      font-size: 13px;
+      flex: 0 0 auto;
     }
     .badge {
       font-size: 8px;
       padding: 1px 6px;
+      flex: 0 0 auto;
+    }
+    header > div[style*="Ananta Labs"] {
+      display: none;
+    }
+    header > div[style*="All rights reserved"] {
+      display: none;
     }
     .header-links {
-      gap: 12px;
-      font-size: 10px;
-      margin: 0 8px;
       display: none;
     }
     .header-status {
-      font-size: 10px;
+      font-size: 9px;
       gap: 4px;
+      margin-left: auto;
+      min-width: 0;
+      max-width: 44vw;
     }
 
     /* ── MOBILE MAIN LAYOUT - SINGLE COLUMN ── */
@@ -869,10 +879,18 @@
       align-items: center;
       justify-content: center;
       background: #fafaf8;
+      text-align: center;
+      padding: 12px;
     }
     .sig-box.signed {
       border-color: var(--success);
       background: #f0fdf4;
+    }
+    .sig-placeholder {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+      max-width: 85%;
     }
 
     /* ── MOBILE AGREEMENT BOX ── */
@@ -1060,6 +1078,7 @@
       gap: 8px;
       z-index: 99;
       margin-top: 20px;
+      width: 100%;
     }
     .footer-credit {
       font-size: 9px;
@@ -1072,7 +1091,7 @@
     }
     .footer-link {
       font-size: 9px;
-      padding: 4px 8px;
+      padding: 4px 6px;
     }
 
     /* ── MOBILE PERMISSION SCREEN ── */
@@ -1326,7 +1345,7 @@
       <div class="sig-box" id="sigBox">
         <div class="sig-placeholder" id="sigPlaceholder">
           <div class="sig-icon">✍️</div>
-          <p>Sign using your webcam on the left</p>
+          <p>Tap Start Signature and draw in the box above using your finger or hand gesture</p>
         </div>
         <img id="signaturePreview" alt="Your signature">
         <div class="sig-captured-badge" id="sigBadge">✓ Signed</div>
