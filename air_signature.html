@@ -56,13 +56,15 @@
     gap: 10px;
   }
   .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: -0.5px;
-    color: var(--ink);
+    display: flex;
+    align-items: center;
+    height: 32px;
   }
-  .logo span { color: var(--accent); }
+  .logo img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+  }
   .badge {
     font-size: 10px;
     font-weight: 600;
@@ -1019,7 +1021,9 @@
 
 <!-- PERMISSION SCREEN -->
 <div id="permScreen">
-  <div class="perm-icon">✋</div>
+  <div class="perm-logo" style="margin-bottom: 30px;">
+    <img src="airsign_logo_premium_1778962646107.png" style="height: 100px; width: auto;">
+  </div>
   <div class="perm-title">AirSign</div>
   <div class="perm-sub">Sign any document in the air using just your index finger. No stylus. No touchscreen. Just your hand.</div>
   <button class="perm-btn" onclick="startCamera()">Allow Camera & Begin</button>
@@ -1027,7 +1031,9 @@
 
 <!-- HEADER -->
 <header>
-  <div class="logo">Air<span>Sign</span></div>
+  <div class="logo">
+    <img src="airsign_logo_premium_1778962646107.png" alt="AirSign Logo">
+  </div>
   <div class="badge">Beta</div>
   <div class="header-brand" style="font-size: 12px; font-weight: 600; color: #8b8b99; margin-left: 8px; letter-spacing: 0.05em;">Ananta Labs</div>
   <div class="header-links">
