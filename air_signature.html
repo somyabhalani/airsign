@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <title>AirSign — Sign With Your Hand</title>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -1568,6 +1568,7 @@ document.getElementById('agreeCheck').addEventListener('change', checkFormReady)
 
 // ─── SUBMIT ──────────────────────────────────────────────
 function submitForm() {
+  resetZoom();
   const name = document.getElementById('fieldName').value.trim();
   const email = document.getElementById('fieldEmail').value.trim();
   const company = document.getElementById('fieldCompany').value.trim();
@@ -2167,8 +2168,16 @@ async function startCamera() {
 </div>
 
 <script>
+function resetZoom() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) {
+    meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+  }
+}
+
 // Modal functions
 function openModal(modalId) {
+  resetZoom();
   document.getElementById(modalId).classList.add('show');
   document.body.classList.add('no-scroll');
 }
@@ -2185,8 +2194,9 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// ── FORM MODAL FUNCTIONS ──
+// ─── FORM MODAL FUNCTIONS ──
 function openFormModal() {
+  resetZoom();
   const formModal = document.getElementById('formModal');
   document.body.classList.add('no-scroll');
   const today = new Date();
