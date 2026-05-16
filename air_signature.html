@@ -1712,15 +1712,15 @@ function downloadPDF() {
   
   // Create HTML content for PDF
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; padding: 40px; background: white;">
+    <div style="font-family: Arial, sans-serif; padding: 25px; background: white;">
       <!-- Header -->
-      <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
+      <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #2563ff; padding-bottom: 15px;">
         <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 28px;">AirSign Digital Agreement</h1>
         <p style="color: #8b8b99; margin: 5px 0; font-size: 14px;">Digitally Signed Document</p>
       </div>
       
       <!-- Document Info -->
-      <div style="background: #f5f3ee; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+      <div style="background: #f5f3ee; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <tr>
             <td style="padding: 8px 0; color: #8b8b99;"><strong>Signer:</strong></td>
@@ -1758,14 +1758,14 @@ function downloadPDF() {
       </div>
       
       <!-- Signature Details -->
-      <div style="background: #f5f3ee; padding: 20px; border-radius: 8px; margin-bottom: 30px; font-size: 13px;">
+      <div style="background: #f5f3ee; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
         <p style="margin: 8px 0; color: #0a0a0f;"><strong>Hand Used:</strong> <span style="color: #2563ff;">${hand}</span></p>
         <p style="margin: 8px 0; color: #0a0a0f;"><strong>Signing Duration:</strong> <span style="color: #2563ff;">${duration} seconds</span></p>
         <p style="margin: 8px 0; color: #0a0a0f;"><strong>Total Strokes:</strong> <span style="color: #2563ff;">${strokes}</span></p>
       </div>
       
       <!-- Terms -->
-      <div style="margin-bottom: 30px; border-left: 4px solid #2563ff; padding-left: 20px;">
+      <div style="margin-bottom: 20px; border-left: 4px solid #2563ff; padding-left: 15px;">
         <h3 style="color: #0a0a0f; margin: 0 0 10px 0; font-size: 14px;">Terms of Agreement</h3>
         <p style="color: #8b8b99; font-size: 12px; line-height: 1.6; margin: 0;">
           By signing this document, you confirm that all information provided is accurate and complete. You agree to the terms and conditions of this service agreement and acknowledge that your air-captured signature constitutes a legally binding digital signature under applicable electronic signature laws.
