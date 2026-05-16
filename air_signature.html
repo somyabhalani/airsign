@@ -2118,7 +2118,7 @@ async function startCamera() {
     </div>
     <div class="form-modal-buttons">
       <button class="btn" onclick="closeFormModal()">Cancel</button>
-      <button class="btn primary" id="formModalSubmit" onclick="submitFormModal()">Download Signature</button>
+      <button class="btn primary" id="formModalSubmit" onclick="submitFormModal()">Submit Signature</button>
     </div>
   </div>
 </div>
@@ -2179,10 +2179,10 @@ function submitFormModal() {
   fieldCompany.value = company;
   agreeCheck.checked = agree;
   
-  // Close modal and download
+  // Close modal and show options overlay
   closeFormModal();
   setTimeout(() => {
-    downloadPDF();
+    submitForm();
   }, 300);
 }
 
