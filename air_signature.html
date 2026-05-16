@@ -1791,7 +1791,7 @@ function downloadPDF() {
   signatureImage.src = state.sigDataUrl;
   
   signatureImage.onload = () => {
-    const safeContent = `<div style="width: 750px; background: white; color: black; padding: 40px; box-sizing: border-box;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+    const safeContent = `<div style="width: 750px; background: white; color: black; padding: 20px; box-sizing: border-box;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
     
     const isMobile = window.innerWidth <= 768;
     const opt = {
