@@ -1727,70 +1727,65 @@ function downloadPDF() {
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; padding: 25px; background: white;">
       <!-- Header -->
-      <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #2563ff; padding-bottom: 15px;">
-        <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 28px;">AirSign Digital Agreement</h1>
-        <p style="color: #8b8b99; margin: 5px 0; font-size: 14px;">Digitally Signed Document</p>
+      <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #2563ff; padding-bottom: 10px;">
+        <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 20px;">AirSign Digital Agreement</h1>
+        <p style="color: #8b8b99; margin: 0; font-size: 12px;">Digitally Signed Document</p>
       </div>
       
       <!-- Document Info -->
-      <div style="background: #f5f3ee; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <div style="background: #f5f3ee; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signer:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${name}</td>
+            <td style="padding: 4px 0; color: #8b8b99;"><strong>Signer:</strong></td>
+            <td style="padding: 4px 0; color: #0a0a0f;">${name}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Email:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${email}</td>
+            <td style="padding: 4px 0; color: #8b8b99;"><strong>Email:</strong></td>
+            <td style="padding: 4px 0; color: #0a0a0f;">${email}</td>
           </tr>
           ${company ? `<tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Organization:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${company}</td>
+            <td style="padding: 4px 0; color: #8b8b99;"><strong>Organization:</strong></td>
+            <td style="padding: 4px 0; color: #0a0a0f;">${company}</td>
           </tr>` : ''}
           <tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Document Date:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${date}</td>
+            <td style="padding: 4px 0; color: #8b8b99;"><strong>Document Date:</strong></td>
+            <td style="padding: 4px 0; color: #0a0a0f;">${date}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signed at:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${submitTime}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signature Time:</strong></td>
-            <td style="padding: 8px 0; color: #0a0a0f;">${new Date().toISOString()}</td>
+            <td style="padding: 4px 0; color: #8b8b99;"><strong>Signed at:</strong></td>
+            <td style="padding: 4px 0; color: #0a0a0f;">${submitTime.split('.')[0]}</td>
           </tr>
         </table>
       </div>
       
       <!-- Signature Box -->
-      <div style="text-align: center; margin-bottom: 30px;">
-        <p style="color: #8b8b99; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Digital Signature</p>
-        <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 20px; background: #fff;">
-          <img src="${state.sigDataUrl}" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <p style="color: #8b8b99; font-size: 9px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Digital Signature</p>
+        <div style="border: 1px solid #2563ff; border-radius: 8px; padding: 10px; background: #fff;">
+          <img src="${state.sigDataUrl}" style="max-width: 100%; max-height: 120px; display: block; margin: 0 auto;">
         </div>
       </div>
       
       <!-- Signature Details -->
-      <div style="background: #f5f3ee; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
-        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Hand Used:</strong> <span style="color: #2563ff;">${hand}</span></p>
-        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Signing Duration:</strong> <span style="color: #2563ff;">${duration} seconds</span></p>
-        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Total Strokes:</strong> <span style="color: #2563ff;">${strokes}</span></p>
+      <div style="background: #f5f3ee; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 11px;">
+        <p style="margin: 4px 0; color: #0a0a0f;"><strong>Hand Used:</strong> <span style="color: #2563ff;">${hand}</span></p>
+        <p style="margin: 4px 0; color: #0a0a0f;"><strong>Signing Duration:</strong> <span style="color: #2563ff;">${duration} seconds</span></p>
+        <p style="margin: 4px 0; color: #0a0a0f;"><strong>Total Strokes:</strong> <span style="color: #2563ff;">${strokes}</span></p>
       </div>
       
       <!-- Terms -->
-      <div style="margin-bottom: 20px; border-left: 4px solid #2563ff; padding-left: 15px;">
-        <h3 style="color: #0a0a0f; margin: 0 0 10px 0; font-size: 14px;">Terms of Agreement</h3>
-        <p style="color: #8b8b99; font-size: 12px; line-height: 1.6; margin: 0;">
-          By signing this document, you confirm that all information provided is accurate and complete. You agree to the terms and conditions of this service agreement and acknowledge that your air-captured signature constitutes a legally binding digital signature under applicable electronic signature laws.
+      <div style="margin-bottom: 15px; border-left: 3px solid #2563ff; padding-left: 12px;">
+        <h3 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 13px;">Terms of Agreement</h3>
+        <p style="color: #8b8b99; font-size: 11px; line-height: 1.4; margin: 0;">
+          By signing, you confirm all info is accurate and agree to these terms as a legally binding digital signature under electronic signature laws.
         </p>
       </div>
       
       <!-- Footer -->
-      <div style="text-align: center; border-top: 1px solid #dddbd4; padding-top: 20px; color: #8b8b99; font-size: 11px;">
-        <p style="margin: 5px 0;">Document digitally signed and verified</p>
-        <p style="margin: 5px 0;">Generated by AirSign • Secure Digital Signature System</p>
-        <p style="margin: 5px 0; color: #16a34a;">✓ This signature is legally binding</p>
-        <p style="margin: 10px 0 0 0; font-size: 10px; color: #2563ff; font-weight: bold;">AirSign - Ananta Labs</p>
+      <div style="text-align: center; border-top: 1px solid #dddbd4; padding-top: 15px; color: #8b8b99; font-size: 10px;">
+        <p style="margin: 3px 0;">Document digitally signed and verified</p>
+        <p style="margin: 3px 0;">Generated by AirSign • Secure Signature System</p>
+        <p style="margin: 3px 0; color: #16a34a;">✓ Legally binding signature</p>
       </div>
     </div>
   `;
