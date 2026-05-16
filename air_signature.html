@@ -348,6 +348,30 @@
 
   /* ── SIGNATURE BOX ── */
   .sig-section { margin-bottom: 24px; }
+  
+  .sig-box::after {
+    display: none;
+  }
+  .sig-box.signed::after {
+    content: '✓';
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--success);
+    background: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .sig-box {
+    position: relative;
+  }
   .sig-box {
     width: 100%;
     height: 120px;
@@ -529,6 +553,8 @@
     text-align: center;
     font-size: 12px;
     color: var(--muted);
+    position: static;
+    margin-top: auto;
   }
   .footer-links {
     display: flex;
@@ -545,6 +571,93 @@
   }
   .footer-link:hover { color: #1d4fed; text-decoration: underline; }
   .footer-credit { color: #8b8b99; font-size: 11px; }
+
+  /* ── FORM POPUP MODAL ── */
+  #formModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 350;
+    padding: 0;
+  }
+  #formModal.show {
+    display: flex;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  
+  .form-modal-content {
+    background: var(--paper);
+    width: 100%;
+    max-width: 600px;
+    border-radius: 16px 16px 0 0;
+    padding: 28px 40px 40px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  
+  .form-modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .form-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-modal-close:hover {
+    color: var(--ink);
+  }
+  
+  .form-modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .form-modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1.5px solid var(--border);
+  }
+  
+  .form-modal-buttons .btn {
+    flex: 1;
+    padding: 12px;
+  }
 
   /* ── MODAL ── */
   .modal {
@@ -881,18 +994,64 @@
       font-size: 11px;
     }
 
+    /* ── MOBILE FORM POPUP MODAL ── */
+    #formModal {
+      align-items: flex-end;
+    }
+    .form-modal-content {
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 100%;
+      padding: 20px 16px 16px;
+      max-height: 85vh;
+    }
+    .form-modal-header {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+    }
+    .form-modal-title {
+      font-size: 18px;
+    }
+    .form-modal-body {
+      gap: 12px;
+    }
+    .form-modal-body .form-group {
+      margin-bottom: 10px;
+    }
+    .form-modal-body label {
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+    .form-modal-body input {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+    .form-modal-body .agreement-box {
+      padding: 10px;
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .form-modal-buttons {
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+    }
+    .form-modal-buttons .btn {
+      padding: 10px;
+      font-size: 12px;
+      min-height: 44px;
+    }
+
     /* ── MOBILE FOOTER ── */
     footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: static;
       padding: 12px;
       background: var(--paper);
       border-top: 1px solid var(--border);
       flex-direction: column;
       gap: 8px;
       z-index: 99;
+      margin-top: 20px;
     }
     .footer-credit {
       font-size: 9px;
@@ -1538,6 +1697,11 @@ function captureSignature() {
   checkFormReady();
   setStatus('active', 'Signature captured ✓');
   overlayText.textContent = '✓ Signature captured!';
+  
+  // Show form modal popup
+  setTimeout(() => {
+    openFormModal();
+  }, 300);
 }
 
 // ─── CLEAR ───────────────────────────────────────────────
@@ -2121,6 +2285,46 @@ async function startCamera() {
   </div>
 </div>
 
+<!-- FORM POPUP MODAL -->
+<div id="formModal">
+  <div class="form-modal-content">
+    <div class="form-modal-header">
+      <div class="form-modal-title">Complete Your Details</div>
+      <button class="form-modal-close" onclick="closeFormModal()">✕</button>
+    </div>
+    <div class="form-modal-body">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" id="formModalName" placeholder="Your full name" required>
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="formModalEmail" placeholder="your@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Company</label>
+        <input type="text" id="formModalCompany" placeholder="Optional">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="text" id="formModalDate" placeholder="DD/MM/YYYY" readonly>
+      </div>
+      <div class="agreement-box">
+        <strong>I agree to the terms and conditions</strong><br>
+        By signing this document, I confirm that I understand and accept the terms and conditions for digital signature use. This signature is legally binding under applicable e-signature laws.
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="formModalAgree" required>
+        <label class="checkbox-label" for="formModalAgree">I have read and agree to the Terms & Conditions</label>
+      </div>
+    </div>
+    <div class="form-modal-buttons">
+      <button class="btn" onclick="closeFormModal()">Cancel</button>
+      <button class="btn primary" id="formModalSubmit" onclick="submitFormModal()">Download Signature</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Modal functions
 function openModal(modalId) {
@@ -2136,6 +2340,69 @@ window.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal')) {
     e.target.classList.remove('show');
   }
+});
+
+// ── FORM MODAL FUNCTIONS ──
+function openFormModal() {
+  const formModal = document.getElementById('formModal');
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  
+  document.getElementById('formModalDate').value = `${day}/${month}/${year}`;
+  document.getElementById('formModalName').value = fieldName.value;
+  document.getElementById('formModalEmail').value = fieldEmail.value;
+  document.getElementById('formModalCompany').value = fieldCompany.value;
+  document.getElementById('formModalAgree').checked = false;
+  document.getElementById('formModalSubmit').disabled = true;
+  
+  formModal.classList.add('show');
+}
+
+function closeFormModal() {
+  document.getElementById('formModal').classList.remove('show');
+}
+
+function submitFormModal() {
+  const name = document.getElementById('formModalName').value.trim();
+  const email = document.getElementById('formModalEmail').value.trim();
+  const company = document.getElementById('formModalCompany').value.trim();
+  const agree = document.getElementById('formModalAgree').checked;
+  
+  if (!name || !email || !agree) {
+    alert('Please fill in all required fields and agree to terms');
+    return;
+  }
+  
+  // Update main form
+  fieldName.value = name;
+  fieldEmail.value = email;
+  fieldCompany.value = company;
+  agreeCheck.checked = agree;
+  
+  // Close modal and download
+  closeFormModal();
+  setTimeout(() => {
+    downloadPDF();
+  }, 300);
+}
+
+// Enable/disable submit button based on form validity
+document.addEventListener('DOMContentLoaded', () => {
+  const nameInput = document.getElementById('formModalName');
+  const emailInput = document.getElementById('formModalEmail');
+  const agreeCheckbox = document.getElementById('formModalAgree');
+  const submitBtn = document.getElementById('formModalSubmit');
+  
+  const checkFormValidity = () => {
+    const isValid = nameInput.value.trim() && emailInput.value.trim() && agreeCheckbox.checked;
+    submitBtn.disabled = !isValid;
+  };
+  
+  nameInput?.addEventListener('input', checkFormValidity);
+  emailInput?.addEventListener('input', checkFormValidity);
+  agreeCheckbox?.addEventListener('change', checkFormValidity);
 });
 </script>
 
