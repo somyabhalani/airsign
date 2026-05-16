@@ -1587,21 +1587,27 @@ function downloadSignatureImage() {
   
   const element = document.createElement('div');
   element.innerHTML = signatureImageContent;
+  element.style.width = '800px';
+  element.style.position = 'absolute';
+  element.style.left = '-9999px';
+  document.body.appendChild(element);
   
   const opt = {
     margin: 5,
     filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
+    html2canvas: { scale: 3, useCORS: true, width: 800, windowWidth: 800 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(element).save().then(() => {
+    document.body.removeChild(element);
+  });
   
   // Show Sign Another button after download
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 500);
+  }, 1000);
 }
 
 // ─── DOWNLOAD SIGNATURE ONLY PDF ─────────────────────────
@@ -1660,16 +1666,22 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
   
   const element = document.createElement('div');
   element.innerHTML = signatureOnlyContent;
+  element.style.width = '800px';
+  element.style.position = 'absolute';
+  element.style.left = '-9999px';
+  document.body.appendChild(element);
   
   const opt = {
     margin: 10,
-    filename: `AirSign_Signature_${name.replace(/\\s+/g, '_')}_${new Date().getTime()}.pdf`,
+    filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
+    html2canvas: { scale: 3, useCORS: true, width: 800, windowWidth: 800 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(element).save().then(() => {
+    document.body.removeChild(element);
+  });
 }
 
 // ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
@@ -1758,21 +1770,27 @@ function downloadPDF() {
   // Generate PDF
   const element = document.createElement('div');
   element.innerHTML = htmlContent;
+  element.style.width = '800px';
+  element.style.position = 'absolute';
+  element.style.left = '-9999px';
+  document.body.appendChild(element);
   
   const opt = {
     margin: 10,
     filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
+    html2canvas: { scale: 3, useCORS: true, width: 800, windowWidth: 800 },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(element).save().then(() => {
+    document.body.removeChild(element);
+  });
   
   // Show Sign Another button after PDF download starts
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 500);
+  }, 1000);
 }
 function restartApp() {
   document.getElementById('successOverlay').classList.remove('show');
