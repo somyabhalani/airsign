@@ -2118,9 +2118,10 @@ async function startCamera() {
         <label class="checkbox-label" for="formModalAgree">I have read and agree to the Terms & Conditions</label>
       </div>
     </div>
-    <div class="form-modal-buttons">
-      <button class="btn" onclick="closeFormModal()">Cancel</button>
-      <button class="btn primary" id="formModalSubmit" onclick="submitFormModal()">Submit Signature</button>
+    <div class="form-modal-buttons" style="flex-direction: column; gap: 10px;">
+      <button class="btn primary" id="formModalSubmitFull" onclick="submitFormModal('full')" style="width: 100%;">📥 Download Full PDF</button>
+      <button class="btn" id="formModalSubmitSign" onclick="submitFormModal('sign')" style="width: 100%; background: #16a34a; color: white; border-color: #16a34a;">✍️ Signature Only</button>
+      <button class="btn" onclick="closeFormModal()" style="width: 100%;">Cancel</button>
     </div>
   </div>
 </div>
@@ -2164,7 +2165,7 @@ function closeFormModal() {
   document.getElementById('formModal').classList.remove('show');
 }
 
-function submitFormModal() {
+function submitFormModal(type) {
   const name = document.getElementById('formModalName').value.trim();
   const email = document.getElementById('formModalEmail').value.trim();
   const company = document.getElementById('formModalCompany').value.trim();
@@ -2181,11 +2182,20 @@ function submitFormModal() {
   fieldCompany.value = company;
   agreeCheck.checked = agree;
   
-  // Close modal and show options overlay
+  // Close modal
   closeFormModal();
+  
+  // Update state for success overlay
+  submitForm();
+  
+  // Trigger specific download
   setTimeout(() => {
-    submitForm();
-  }, 300);
+    if (type === 'full') {
+      downloadPDF();
+    } else {
+      downloadSignatureImage();
+    }
+  }, 500);
 }
 
 // Enable/disable submit button based on form validity
@@ -2193,11 +2203,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameInput = document.getElementById('formModalName');
   const emailInput = document.getElementById('formModalEmail');
   const agreeCheckbox = document.getElementById('formModalAgree');
-  const submitBtn = document.getElementById('formModalSubmit');
+  const submitBtnFull = document.getElementById('formModalSubmitFull');
+  const submitBtnSign = document.getElementById('formModalSubmitSign');
   
   const checkFormValidity = () => {
     const isValid = nameInput.value.trim() && emailInput.value.trim() && agreeCheckbox.checked;
-    submitBtn.disabled = !isValid;
+    submitBtnFull.disabled = !isValid;
+    submitBtnSign.disabled = !isValid;
   };
   
   nameInput?.addEventListener('input', checkFormValidity);
