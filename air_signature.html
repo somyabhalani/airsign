@@ -57,11 +57,19 @@
     gap: 10px;
   }
   .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-family: 'Syne', sans-serif;
     font-weight: 800;
     font-size: 18px;
     letter-spacing: -0.5px;
     color: var(--ink);
+  }
+  .logo img {
+    height: 24px;
+    width: auto;
+    border-radius: 4px;
   }
   .logo span { color: var(--accent); }
   .badge {
@@ -1030,7 +1038,10 @@
 
 <!-- HEADER -->
 <header>
-  <div class="logo">Air<span>Sign</span></div>
+  <div class="logo">
+    <img src="favicon.png" alt="AirSign">
+    Air<span>Sign</span>
+  </div>
   <div class="badge">Beta</div>
   <div class="header-brand" style="font-size: 12px; font-weight: 600; color: #8b8b99; margin-left: 8px; letter-spacing: 0.05em;">Ananta Labs</div>
   <div class="header-links">
