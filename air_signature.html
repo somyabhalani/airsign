@@ -1585,24 +1585,28 @@ function downloadSignatureImage() {
     </div>
   `;
   
-  const element = document.createElement('div');
-  element.innerHTML = signatureImageContent;
-  element.style.width = '700px';
-  element.style.background = 'white';
-
+  const safeContent = `
+    <div style="width: 1024px; background: white; color: black; font-family: sans-serif; padding: 40px; text-align: center;">
+      <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 30px; background: #f5f3ee;">
+        <img src="${state.sigDataUrl}" style="max-width: 100%; height: auto;">
+      </div>
+      <p style="margin-top: 20px; font-size: 14px; color: #8b8b99;">&copy; 2026 AirSign by Ananta Labs</p>
+    </div>
+  `;
+  
   const opt = {
-    margin: 5,
+    margin: 10,
     filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, windowWidth: 700 },
+    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(safeContent).save();
   
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 500);
+  }, 1000);
 }
 
 // ─── DOWNLOAD SIGNATURE ONLY PDF ─────────────────────────
@@ -1659,20 +1663,17 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
     </div>
   `;
   
-  const element = document.createElement('div');
-  element.innerHTML = signatureOnlyContent;
-  element.style.width = '700px';
-  element.style.background = 'white';
-
+  const safeContent = `<div style="width: 1024px; background: white; color: black;">${signatureOnlyContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+  
   const opt = {
     margin: 10,
     filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, windowWidth: 700 },
+    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(safeContent).save();
 }
 
 // ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
@@ -1759,24 +1760,21 @@ function downloadPDF() {
   `;
   
   // Generate PDF
-  const element = document.createElement('div');
-  element.innerHTML = htmlContent;
-  element.style.width = '800px';
-  element.style.background = 'white';
-
+  const safeContent = `<div style="width: 1024px; background: white; color: black;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+  
   const opt = {
     margin: 10,
     filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, windowWidth: 800 },
+    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
   
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(safeContent).save();
   
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
-  }, 500);
+  }, 1000);
 }
 function restartApp() {
   document.getElementById('successOverlay').classList.remove('show');
