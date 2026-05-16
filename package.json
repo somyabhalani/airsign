@@ -1,0 +1,24 @@
+{
+  "name": "airsign",
+  "version": "1.0.0",
+  "description": "Digital signature capture using hand gesture recognition",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "signature",
+    "hand-gesture",
+    "mediapipe",
+    "digital-signature"
+  ],
+  "author": "Ananta Labs",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

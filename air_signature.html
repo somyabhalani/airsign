@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AirSign — Sign With Your Hand</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0a0a0f;
+    --paper: #f5f3ee;
+    --accent: #2563ff;
+    --accent-glow: rgba(37,99,255,0.25);
+    --success: #16a34a;
+    --muted: #8b8b99;
+    --border: #dddbd4;
+    --cam-bg: #0d0d14;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(245,243,238,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    gap: 10px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+  }
+  .logo span { color: var(--accent); }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .header-status {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    font-size: 12px;
+    margin: 0 20px;
+  }
+  .header-link {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .header-link:hover { color: #1d4fed; }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.4s;
+  }
+  .status-dot.active { background: var(--success); box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
+  .status-dot.signing { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 3px var(--accent-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100vh;
+    padding-top: 56px;
+  }
+
+  /* ── CAM PANEL ── */
+  .cam-panel {
+    background: var(--cam-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cam-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(37,99,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cam-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    align-self: flex-start;
+  }
+
+  .cam-container {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    transition: box-shadow 0.4s;
+  }
+  .cam-container.hand-detected {
+    box-shadow: 0 0 0 2px var(--accent), 0 0 40px var(--accent-glow);
+    animation: camPulse 2s infinite;
+  }
+  @keyframes camPulse {
+    0%,100% { box-shadow: 0 0 0 2px var(--accent), 0 0 40px var(--accent-glow); }
+    50% { box-shadow: 0 0 0 2px var(--accent), 0 0 60px rgba(37,99,255,0.15); }
+  }
+
+  #videoEl {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    opacity: 0;
+  }
+  #trackingCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(-1);
+  }
+  #sigCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cam-overlay-text {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,15,0.75);
+    backdrop-filter: blur(8px);
+    color: rgba(255,255,255,0.85);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: opacity 0.3s;
+  }
+
+  .fingertip-dot {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    display: none;
+    z-index: 10;
+  }
+  .fingertip-dot.drawing {
+    background: #fff;
+    box-shadow: 0 0 16px rgba(255,255,255,0.8);
+  }
+
+  .cam-controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn.primary:hover { background: #1d4fed; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .instruction-cards {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .inst-card {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .inst-icon { font-size: 18px; margin-bottom: 4px; }
+  .inst-text { font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.4; }
+
+  /* ── FORM PANEL ── */
+  .form-panel {
+    background: var(--paper);
+    overflow-y: auto;
+    padding: 36px 40px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .doc-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .doc-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .doc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .doc-subtitle { font-size: 13px; color: var(--muted); }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input[type="text"], input[type="email"], input[type="date"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .agreement-box {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .agreement-box strong { color: var(--ink); }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .checkbox-label { font-size: 13px; color: var(--ink); cursor: pointer; }
+
+  /* ── SIGNATURE BOX ── */
+  .sig-section { margin-bottom: 24px; }
+  .sig-box {
+    width: 100%;
+    height: 120px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .sig-box.active {
+    border-color: var(--accent);
+    border-style: solid;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    animation: sigPulse 1.5s infinite;
+  }
+  .sig-box.signed {
+    border-color: var(--success);
+    border-style: solid;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.15);
+  }
+  @keyframes sigPulse {
+    0%,100% { box-shadow: 0 0 0 3px var(--accent-glow); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+
+  .sig-placeholder {
+    text-align: center;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .sig-placeholder .sig-icon { font-size: 28px; margin-bottom: 6px; opacity: 0.4; }
+  .sig-placeholder p { font-size: 12px; }
+
+  #signaturePreview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+    padding: 8px;
+  }
+
+  .sig-captured-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--success);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: none;
+  }
+
+  .sig-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ── SUBMIT ── */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .submit-btn:hover { background: #1a1a2e; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,10,15,0.2); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── SUCCESS OVERLAY ── */
+  #successOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(245,243,238,0.95);
+    backdrop-filter: blur(20px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    gap: 16px;
+    text-align: center;
+    padding: 40px;
+  }
+  #successOverlay.show { display: flex; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+  .success-icon { font-size: 64px; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0% { transform: scale(0); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  .success-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--ink); }
+  .success-sub { font-size: 15px; color: var(--muted); max-width: 360px; }
+  .success-meta {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-top: 8px;
+  }
+  .success-meta strong { color: var(--ink); }
+  .restart-btn {
+    margin-top: 8px;
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { background: #1d4fed; }
+
+  /* ── PERMISSION SCREEN ── */
+  #permScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--cam-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    gap: 16px;
+    text-align: center;
+    padding: 40px;
+  }
+  .perm-icon { font-size: 56px; }
+  .perm-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
+  .perm-sub { font-size: 14px; color: rgba(255,255,255,0.5); max-width: 320px; }
+  .perm-btn {
+    margin-top: 8px;
+    padding: 13px 36px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .perm-btn:hover { background: #1d4fed; transform: translateY(-1px); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .footer-link {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .footer-link:hover { color: #1d4fed; text-decoration: underline; }
+  .footer-credit { color: #8b8b99; font-size: 11px; }
+
+  /* ── MODAL ── */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 20px;
+  }
+  .modal.show { display: flex; animation: fadeIn 0.3s ease; }
+  .modal-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-body {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #555;
+  }
+  .modal-body h3 {
+    color: var(--ink);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .modal-body p { margin-bottom: 12px; }
+  .modal-body li { margin-left: 20px; margin-bottom: 8px; }
+
+  /* ── MOBILE RESPONSIVENESS ── */
+  @media (max-width: 768px) {
+    /* ── MOBILE HEADER ── */
+    header {
+      padding: 0 12px;
+      height: 48px;
+      gap: 8px;
+    }
+    .logo {
+      font-size: 14px;
+    }
+    .badge {
+      font-size: 8px;
+      padding: 1px 6px;
+    }
+    .header-links {
+      gap: 12px;
+      font-size: 10px;
+      margin: 0 8px;
+      display: none;
+    }
+    .header-status {
+      font-size: 10px;
+      gap: 4px;
+    }
+
+    /* ── MOBILE MAIN LAYOUT ── */
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      padding-top: 48px;
+    }
+
+    /* ── MOBILE CAM PANEL ── */
+    .cam-panel {
+      padding: 12px;
+      gap: 10px;
+      background: var(--cam-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .cam-label {
+      font-size: 9px;
+    }
+    .cam-container {
+      max-width: 100%;
+      aspect-ratio: 4/3;
+      border-radius: 12px;
+    }
+
+    /* ── MOBILE CANVAS ── */
+    #trackingCanvas, #sigCanvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── MOBILE FORM PANEL ── */
+    .form-panel {
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+      max-height: calc(100vh - 48px - 200px);
+    }
+    .form-section {
+      gap: 8px;
+    }
+    .form-section label {
+      font-size: 12px;
+    }
+    .form-section input {
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+
+    /* ── MOBILE INSTRUCTION CARDS ── */
+    .instruction-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .instruction-card {
+      padding: 8px;
+      font-size: 10px;
+      border-radius: 8px;
+    }
+
+    /* ── MOBILE SIGNATURE BOX ── */
+    .sig-box {
+      height: 100px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+    }
+    .sig-box.signed {
+      border-color: var(--success);
+    }
+
+    /* ── MOBILE BUTTONS ── */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn {
+      padding: 10px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    .btn-primary, .btn-secondary, .btn-success {
+      width: 100%;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    /* ── MOBILE CHECKBOX ── */
+    .agreement-box {
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .agreement-box label {
+      font-size: 11px;
+      gap: 8px;
+    }
+    .agreement-box input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* ── MOBILE SUCCESS OVERLAY ── */
+    .success-overlay {
+      padding: 16px;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+    .success-overlay h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .success-overlay p {
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    .success-meta {
+      font-size: 11px;
+      gap: 8px;
+    }
+    .success-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .success-buttons .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 12px;
+      min-height: 44px;
+    }
+
+    /* ── MOBILE MODALS ── */
+    .modal-content {
+      max-width: 100%;
+      width: 90%;
+      max-height: 90vh;
+      border-radius: 12px;
+    }
+    .modal-header {
+      padding: 12px;
+    }
+    .modal-title {
+      font-size: 16px;
+    }
+    .modal-close {
+      font-size: 20px;
+      width: 28px;
+      height: 28px;
+    }
+    .modal-body {
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 12px;
+    }
+    .modal-body h3 {
+      font-size: 13px;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    .modal-body p {
+      margin-bottom: 8px;
+    }
+    .modal-body ul {
+      margin-left: 16px;
+    }
+    .modal-body li {
+      margin-left: 0;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    /* ── MOBILE FOOTER ── */
+    footer {
+      padding: 16px 12px;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .footer-credit {
+      font-size: 10px;
+      text-align: center;
+    }
+    .footer-links {
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .footer-link {
+      font-size: 10px;
+    }
+
+    /* ── MOBILE PERMISSION SCREEN ── */
+    .perm-screen {
+      padding: 16px;
+    }
+    .perm-emoji {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .perm-screen h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .perm-screen p {
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .perm-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 13px;
+      min-height: 44px;
+      border-radius: 8px;
+    }
+  }
+
+  /* ── TABLET/SMALL SCREEN (768px to 1024px) ── */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    main {
+      grid-template-columns: 1fr 0.8fr;
+    }
+    header {
+      padding: 0 16px;
+    }
+    .cam-panel {
+      padding: 16px;
+    }
+    .form-panel {
+      padding: 16px;
+    }
+    .button-group {
+      flex-direction: row;
+      gap: 8px;
+    }
+    .btn {
+      flex: 1;
+    }
+  }
+
+  /* ── EXTRA SMALL MOBILE (< 480px) ── */
+  @media (max-width: 479px) {
+    .cam-container {
+      aspect-ratio: 16/9;
+    }
+    .form-panel {
+      max-height: calc(100vh - 48px - 150px);
+    }
+    .form-section input {
+      font-size: 16px;
+    }
+    .instruction-card {
+      padding: 6px;
+      font-size: 9px;
+    }
+    .sig-box {
+      height: 80px;
+    }
+    .btn {
+      padding: 8px;
+      font-size: 11px;
+    }
+    header {
+      padding: 0 8px;
+    }
+    .header-links {
+      display: none;
+    }
+  }
+
+  /* ── LARGE DESKTOP (> 1400px) ── */
+  @media (min-width: 1401px) {
+    header {
+      padding: 0 40px;
+    }
+    .cam-panel {
+      padding: 40px;
+    }
+    .form-panel {
+      padding: 40px;
+    }
+    main {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+  }
+
+  /* ── LANDSCAPE MOBILE ── */
+  @media (max-height: 600px) and (orientation: landscape) {
+    header {
+      height: 44px;
+    }
+    main {
+      padding-top: 44px;
+    }
+    .cam-panel {
+      padding: 8px;
+    }
+    .form-panel {
+      padding: 8px;
+    }
+    .button-group {
+      flex-direction: row;
+      gap: 6px;
+    }
+    .instruction-cards {
+      display: none;
+    }
+    .instruction-card {
+      display: none;
+    }
+  }
+
+  /* ── TOUCH DEVICES ── */
+  @media (hover: none) and (pointer: coarse) {
+    .btn {
+      min-height: 44px;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .header-link {
+      padding: 8px 12px;
+    }
+    .footer-link {
+      padding: 8px 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- PERMISSION SCREEN -->
+<div id="permScreen">
+  <div class="perm-icon">✋</div>
+  <div class="perm-title">AirSign</div>
+  <div class="perm-sub">Sign any document in the air using just your index finger. No stylus. No touchscreen. Just your hand.</div>
+  <button class="perm-btn" onclick="startCamera()">Allow Camera & Begin</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Air<span>Sign</span></div>
+  <div class="badge">Beta</div>
+  <div style="font-size: 12px; font-weight: 600; color: #8b8b99; margin-left: 8px; letter-spacing: 0.05em;">Ananta Labs</div>
+  <div class="header-links">
+    <a class="header-link" onclick="openModal('privacyModal')">Privacy</a>
+    <a class="header-link" onclick="openModal('termsModal')">Terms</a>
+    <a class="header-link" onclick="openModal('howtoModal')">How to Use</a>
+    <a class="header-link" onclick="openModal('contactModal')">Contact</a>
+  </div>
+  <div style="font-size: 11px; color: #8b8b99; margin-left: auto; margin-right: 15px;">© 2026 All rights reserved. Ananta Labs</div>
+  <div class="header-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Waiting for camera</span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <!-- CAM PANEL -->
+  <div class="cam-panel">
+    <div class="cam-label">Live Camera Feed</div>
+
+    <div class="cam-container" id="camContainer">
+      <video id="videoEl" playsinline autoplay muted></video>
+      <canvas id="trackingCanvas"></canvas>
+      <canvas id="sigCanvas"></canvas>
+      <div class="fingertip-dot" id="fingertipDot"></div>
+      <div class="cam-overlay-text" id="overlayText">Raise your index finger to sign</div>
+    </div>
+
+    <div class="cam-controls">
+      <button class="btn" onclick="clearSignature()">🗑 Clear</button>
+      <button class="btn" id="startBtn" onclick="startSigning()" style="display:none;">▶ Start Signature</button>
+      <button class="btn" id="pauseBtn" onclick="togglePause()" style="display:none; background: rgba(255,165,0,0.3); border-color: rgba(255,165,0,0.5);">⏸ Pause</button>
+      <button class="btn primary" id="doneBtn" onclick="captureSignature()" disabled>✓ Use Signature</button>
+    </div>
+
+    <div class="instruction-cards">
+      <div class="inst-card">
+        <div class="inst-icon">☝️</div>
+        <div class="inst-text">Index finger up or pinch</div>
+      </div>
+      <div class="inst-card">
+        <div class="inst-icon">✊</div>
+        <div class="inst-text">Close fist to pause</div>
+      </div>
+      <div class="inst-card">
+        <div class="inst-icon">🖐️</div>
+        <div class="inst-text">Both hands open to clear</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+    <div class="doc-header">
+      <div class="doc-tag">Digital Agreement</div>
+      <div class="doc-title">Service Agreement</div>
+      <div class="doc-subtitle">Fill in your details and sign in the air using your webcam</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="fieldName" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label>Date of Signing</label>
+        <input type="text" id="fieldDate" readonly style="background: #f0f0f0; cursor: not-allowed; color: #0a0a0f; font-weight: 500;">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="fieldEmail" placeholder="your@email.com">
+    </div>
+
+    <div class="form-group">
+      <label>Company / Organisation</label>
+      <input type="text" id="fieldCompany" placeholder="Optional">
+    </div>
+
+    <div class="agreement-box">
+      <strong>Terms of Agreement</strong><br>
+      By signing this document, you confirm that all information provided is accurate and complete. You agree to the terms and conditions of this service agreement and acknowledge that your air-captured signature constitutes a legally binding digital signature under applicable electronic signature laws.
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="agreeCheck">
+      <label class="checkbox-label" for="agreeCheck">I have read and agree to the terms above</label>
+    </div>
+
+    <div class="sig-section">
+      <label>Signature</label>
+      <div class="sig-box" id="sigBox">
+        <div class="sig-placeholder" id="sigPlaceholder">
+          <div class="sig-icon">✍️</div>
+          <p>Sign using your webcam on the left</p>
+        </div>
+        <img id="signaturePreview" alt="Your signature">
+        <div class="sig-captured-badge" id="sigBadge">✓ Signed</div>
+      </div>
+      <div class="sig-hint">⚡ Use your index finger in the air — click "Use Signature" when done</div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()" disabled>
+      Submit Signed Document →
+    </button>
+  </div>
+</main>
+
+<!-- SUCCESS OVERLAY -->
+  <div id="successOverlay">
+  <div class="success-icon">🎉</div>
+  <div class="success-title">Document Signed!</div>
+  <div class="success-sub">Your air signature has been captured and the document submitted successfully.</div>
+  <div class="success-meta" id="successMeta"></div>
+  <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; justify-content: center;">
+    <button class="restart-btn" onclick="downloadPDF()" style="background: var(--accent);">📥 Download Full PDF</button>
+    <button class="restart-btn" onclick="downloadSignatureImage()" style="background: #16a34a;">✍️ Signature Only</button>
+    <button class="restart-btn" id="signAnotherBtn" onclick="restartApp()" style="background: var(--muted); display: none;">↻ Sign Another</button>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+const state = {
+  isDrawing: false,
+  hasHand: false,
+  handDetected: false,
+  isSigned: false,
+  signingActive: false,
+  isPaused: false,
+  points: [],
+  currentStroke: [],
+  allStrokes: [],
+  lastPos: null,
+  posBuffer: [],
+  sigStartTime: null,
+  totalStrokes: 0,
+  handUsed: 'unknown',
+  sigDataUrl: null,
+};
+
+// ─── ELEMENTS ────────────────────────────────────────────
+const videoEl = document.getElementById('videoEl');
+const trackingCanvas = document.getElementById('trackingCanvas');
+const sigCanvas = document.getElementById('sigCanvas');
+const tCtx = trackingCanvas.getContext('2d');
+const sCtx = sigCanvas.getContext('2d');
+const fingertipDot = document.getElementById('fingertipDot');
+const overlayText = document.getElementById('overlayText');
+const camContainer = document.getElementById('camContainer');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const doneBtn = document.getElementById('doneBtn');
+const submitBtn = document.getElementById('submitBtn');
+const sigBox = document.getElementById('sigBox');
+const sigPlaceholder = document.getElementById('sigPlaceholder');
+const signaturePreview = document.getElementById('signaturePreview');
+const sigBadge = document.getElementById('sigBadge');
+
+// ─── SET TODAY'S DATE (Indian Format: DD/MM/YYYY) ───────
+const today = new Date();
+const indianDate = String(today.getDate()).padStart(2, '0') + '/' + 
+                   String(today.getMonth() + 1).padStart(2, '0') + '/' + 
+                   today.getFullYear();
+document.getElementById('fieldDate').value = indianDate;
+
+// ─── CANVAS RESIZE ───────────────────────────────────────
+function resizeCanvases() {
+  const rect = camContainer.getBoundingClientRect();
+  trackingCanvas.width = rect.width;
+  trackingCanvas.height = rect.height;
+  sigCanvas.width = rect.width;
+  sigCanvas.height = rect.height;
+  // Redraw existing signature
+  redrawSignature();
+}
+window.addEventListener('resize', resizeCanvases);
+window.addEventListener('orientationchange', () => {
+  setTimeout(resizeCanvases, 100);
+});
+
+// Mobile viewport height fix
+if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+  const setViewportHeight = () => {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  };
+  window.addEventListener('resize', setViewportHeight);
+  window.addEventListener('orientationchange', setViewportHeight);
+  setViewportHeight();
+}
+
+// Prevent zoom on input focus (iOS)
+document.addEventListener('touchmove', (e) => {
+  if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+    e.preventDefault();
+  }
+}, false);
+
+// ─── HAND GESTURE DETECTION ──────────────────────────────
+function isIndexUp(landmarks) {
+  const indexTip = landmarks[8];
+  const indexMid = landmarks[6];
+  const middleTip = landmarks[12];
+  const middleMid = landmarks[10];
+  const ringTip = landmarks[16];
+  const ringMid = landmarks[14];
+  const pinkyTip = landmarks[20];
+  const pinkyMid = landmarks[18];
+
+  const indexUp = indexTip.y < indexMid.y - 0.03;
+  const middleDown = middleTip.y > middleMid.y - 0.01;
+  const ringDown = ringTip.y > ringMid.y - 0.01;
+  const pinkyDown = pinkyTip.y > pinkyMid.y - 0.01;
+
+  return indexUp && middleDown && ringDown && pinkyDown;
+}
+
+// Detect thumb and index finger pinching (for precise drawing)
+function isThumbIndexPinch(landmarks) {
+  const thumbTip = landmarks[4];
+  const indexTip = landmarks[8];
+  const distance = Math.sqrt(
+    Math.pow(thumbTip.x - indexTip.x, 2) + 
+    Math.pow(thumbTip.y - indexTip.y, 2)
+  );
+  // Close enough to be pinching (adjust 0.05 for sensitivity)
+  return distance < 0.05;
+}
+
+function isFist(landmarks) {
+  const tips = [8, 12, 16, 20];
+  const mids = [6, 10, 14, 18];
+  return tips.every((tip, i) => landmarks[tip].y > landmarks[mids[i]].y);
+}
+
+function isOpenHand(landmarks) {
+  const tips = [8, 12, 16, 20];
+  const mids = [6, 10, 14, 18];
+  return tips.every((tip, i) => landmarks[tip].y < landmarks[mids[i]].y);
+}
+
+// ─── SMOOTHING ───────────────────────────────────────────
+function smoothPoint(x, y) {
+  state.posBuffer.push({ x, y });
+  if (state.posBuffer.length > 5) state.posBuffer.shift();
+  const avg = state.posBuffer.reduce((a, p) => ({ x: a.x + p.x, y: a.y + p.y }), { x: 0, y: 0 });
+  return { x: avg.x / state.posBuffer.length, y: avg.y / state.posBuffer.length };
+}
+
+// ─── INTERPOLATE POINTS (fix for fast movement skipping) ──
+function interpolatePoints(from, to, maxDist = 3) {
+  const points = [];
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  if (distance < 0.5) return []; // Too close, skip
+  
+  const steps = Math.ceil(distance / maxDist);
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    points.push({
+      x: from.x + dx * t,
+      y: from.y + dy * t
+    });
+  }
+  return points;
+}
+
+// ─── DRAW ON SIG CANVAS ──────────────────────────────────
+function drawToSig(x, y) {
+  // Flip x to account for mirrored camera feed
+  const W = sigCanvas.width;
+  x = W - x;
+  
+  if (!state.lastPos) {
+    state.lastPos = { x, y };
+    state.currentStroke.push({ x, y });
+    state.allStrokes.push({ x, y });
+    return;
+  }
+  
+  const interpolated = interpolatePoints(state.lastPos, { x, y });
+  
+  // Add last point
+  if (interpolated.length > 0) {
+    interpolated.push({ x, y });
+  } else {
+    interpolated.push({ x, y });
+  }
+  
+  for (const point of interpolated) {
+    // Draw with precise straight lines for perfect continuity
+    sCtx.beginPath();
+    sCtx.moveTo(state.lastPos.x, state.lastPos.y);
+    sCtx.lineTo(point.x, point.y);
+    sCtx.strokeStyle = '#0f1f6e';
+    sCtx.lineWidth = 3.5;
+    sCtx.lineCap = 'round';
+    sCtx.lineJoin = 'round';
+    sCtx.stroke();
+
+    state.currentStroke.push({ x: point.x, y: point.y });
+    state.allStrokes.push({ x: point.x, y: point.y });
+    state.lastPos = { x: point.x, y: point.y };
+  }
+  
+  doneBtn.disabled = false;
+}
+
+function redrawSignature() {
+  // Called on resize — we just clear; strokes are already rendered
+}
+
+// ─── START SIGNING ───────────────────────────────────────
+function startSigning() {
+  state.signingActive = true;
+  state.isPaused = false;
+  startBtn.style.display = 'none';
+  pauseBtn.style.display = 'block';
+  pauseBtn.textContent = '⏸ Pause';
+  overlayText.textContent = '✍️ Signing mode active — raise index finger or pinch to draw';
+  setStatus('signing', 'Ready to sign');
+}
+
+// ─── TOGGLE PAUSE ───────────────────────────────────────
+function togglePause() {
+  state.isPaused = !state.isPaused;
+  if (state.isPaused) {
+    state.isDrawing = false;
+    state.lastPos = null;
+    state.posBuffer = [];
+    pauseBtn.textContent = '▶ Resume';
+    pauseBtn.style.background = 'rgba(37,99,255,0.3)';
+    pauseBtn.style.borderColor = 'rgba(37,99,255,0.5)';
+    overlayText.textContent = '⏸ Paused';
+    setStatus('active', 'Paused');
+  } else {
+    pauseBtn.textContent = '⏸ Pause';
+    pauseBtn.style.background = 'rgba(255,165,0,0.3)';
+    pauseBtn.style.borderColor = 'rgba(255,165,0,0.5)';
+    overlayText.textContent = '✍️ Resumed — continue signing';
+    setStatus('signing', 'Signing');
+  }
+}
+
+// ─── MEDIAPIPE RESULTS ───────────────────────────────────
+let handsDetected = 0;
+function onResults(results) {
+  const W = trackingCanvas.width;
+  const H = trackingCanvas.height;
+
+  tCtx.clearRect(0, 0, W, H);
+
+  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    state.hasHand = false;
+    state.handDetected = false;
+    state.isDrawing = false;
+    state.lastPos = null;
+    state.posBuffer = [];
+    camContainer.classList.remove('hand-detected');
+    fingertipDot.style.display = 'none';
+    startBtn.style.display = 'none';
+    setStatus('waiting', 'Raise your index finger to sign');
+    overlayText.textContent = 'No hand detected — show your hand';
+    return;
+  }
+
+  state.hasHand = true;
+  state.handDetected = true;
+  camContainer.classList.add('hand-detected');
+  
+  // Show start button if not signing yet
+  if (!state.signingActive) {
+    startBtn.style.display = 'block';
+  }
+
+  // Check for two open hands = clear
+  if (results.multiHandLandmarks.length >= 2) {
+    const bothOpen = results.multiHandLandmarks.every(lm => isOpenHand(lm));
+    if (bothOpen) {
+      clearSignature();
+      return;
+    }
+  }
+
+  const landmarks = results.multiHandLandmarks[0];
+  let handedness = results.multiHandedness?.[0]?.label || 'Right';
+  // Fix hand detection: reverse because camera is mirrored
+  handedness = handedness === 'Left' ? 'Right' : 'Left';
+  state.handUsed = handedness;
+
+  // Draw skeleton
+  if (window.drawConnectors && window.HAND_CONNECTIONS) {
+    drawConnectors(tCtx, landmarks, HAND_CONNECTIONS, { color: 'rgba(37,99,255,0.4)', lineWidth: 1.5 });
+    drawLandmarks(tCtx, landmarks, { color: 'rgba(37,99,255,0.7)', lineWidth: 1, radius: 3 });
+  }
+
+  // Fingertip position
+  const tip = landmarks[8];
+  const tipX = tip.x * W;
+  const tipY = tip.y * H;
+  const smooth = smoothPoint(tipX, tipY);
+
+  // Show fingertip dot (mirrored canvas, so flip x for dot positioning)
+  const dotX = (1 - tip.x) * W; // account for CSS mirror
+  fingertipDot.style.display = 'block';
+  fingertipDot.style.left = dotX + 'px';
+  fingertipDot.style.top = tipY + 'px';
+
+  if (isFist(landmarks)) {
+    // Pause drawing
+    if (state.isDrawing) {
+      state.totalStrokes++;
+      state.currentStroke = [];
+    }
+    state.isDrawing = false;
+    state.lastPos = null;
+    state.posBuffer = [];
+    fingertipDot.classList.remove('drawing');
+    overlayText.textContent = 'Fist detected — paused';
+    setStatus('active', 'Hand detected');
+  } else if ((isIndexUp(landmarks) || isThumbIndexPinch(landmarks)) && state.signingActive && !state.isPaused) {
+    // Drawing mode - either index up or thumb+index pinching (only if not paused)
+    if (!state.isDrawing) {
+      state.sigStartTime = state.sigStartTime || Date.now();
+    }
+    state.isDrawing = true;
+    fingertipDot.classList.add('drawing');
+    overlayText.textContent = '✍️ Signing...';
+    setStatus('signing', 'Signing in progress');
+    drawToSig(smooth.x, smooth.y);
+  } else {
+    state.isDrawing = false;
+    state.lastPos = null;
+    state.posBuffer = [];
+    fingertipDot.classList.remove('drawing');
+    if (state.signingActive) {
+      overlayText.textContent = 'Raise index finger or pinch to draw';
+    } else {
+      overlayText.textContent = 'Click "Start Signature" when ready';
+    }
+    setStatus('active', 'Hand detected');
+  }
+}
+
+// ─── STATUS ──────────────────────────────────────────────
+function setStatus(type, text) {
+  statusText.textContent = text;
+  statusDot.className = 'status-dot';
+  if (type === 'active') statusDot.classList.add('active');
+  if (type === 'signing') statusDot.classList.add('signing');
+}
+
+// ─── CAPTURE SIGNATURE ───────────────────────────────────
+function captureSignature() {
+  if (state.allStrokes.length === 0) return;
+
+  // Get signature from canvas
+  const dataUrl = sigCanvas.toDataURL('image/png');
+  state.sigDataUrl = dataUrl;
+  state.isSigned = true;
+
+  // Show in form
+  signaturePreview.src = dataUrl;
+  signaturePreview.style.display = 'block';
+  sigPlaceholder.style.display = 'none';
+  sigBadge.style.display = 'block';
+  sigBox.classList.add('signed');
+  sigBox.classList.remove('active');
+
+  checkFormReady();
+  setStatus('active', 'Signature captured ✓');
+  overlayText.textContent = '✓ Signature captured!';
+}
+
+// ─── CLEAR ───────────────────────────────────────────────
+function clearSignature() {
+  sCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  state.allStrokes = [];
+  state.currentStroke = [];
+  state.lastPos = null;
+  state.posBuffer = [];
+  state.isDrawing = false;
+  state.isSigned = false;
+  state.sigDataUrl = null;
+  state.sigStartTime = null;
+  state.totalStrokes = 0;
+  state.signingActive = false;
+  state.handDetected = false;
+
+  signaturePreview.style.display = 'none';
+  signaturePreview.src = '';
+  sigPlaceholder.style.display = 'flex';
+  sigBadge.style.display = 'none';
+  sigBox.classList.remove('signed', 'active');
+  startBtn.style.display = 'none';
+  pauseBtn.style.display = 'none';
+  pauseBtn.textContent = '⏸ Pause';
+  doneBtn.disabled = true;
+  submitBtn.disabled = true;
+}
+
+// ─── FORM VALIDATION ─────────────────────────────────────
+function checkFormReady() {
+  const name = document.getElementById('fieldName').value.trim();
+  const email = document.getElementById('fieldEmail').value.trim();
+  const agreed = document.getElementById('agreeCheck').checked;
+  submitBtn.disabled = !(name && email && agreed && state.isSigned);
+}
+
+document.getElementById('fieldName').addEventListener('input', checkFormReady);
+document.getElementById('fieldEmail').addEventListener('input', checkFormReady);
+document.getElementById('agreeCheck').addEventListener('change', checkFormReady);
+
+// ─── SUBMIT ──────────────────────────────────────────────
+function submitForm() {
+  const name = document.getElementById('fieldName').value.trim();
+  const email = document.getElementById('fieldEmail').value.trim();
+  const company = document.getElementById('fieldCompany').value.trim();
+  const date = document.getElementById('fieldDate').value;
+  const duration = state.sigStartTime ? Math.round((Date.now() - state.sigStartTime) / 1000) : 0;
+
+  const payload = {
+    name,
+    email,
+    company,
+    date,
+    timestamp: new Date().toISOString(),
+    signature_data_url: state.sigDataUrl,
+    hand_used: state.handUsed,
+    signing_duration_seconds: duration,
+    total_strokes: state.totalStrokes,
+  };
+
+  console.log('📝 Signed Document Payload:', payload);
+
+  // Show success
+  document.getElementById('successMeta').innerHTML = `
+    <strong>Name:</strong> ${name}<br>
+    <strong>Email:</strong> ${email}<br>
+    ${company ? `<strong>Company:</strong> ${company}<br>` : ''}
+    <strong>Signed at:</strong> ${new Date().toLocaleString()}<br>
+    <strong>Hand used:</strong> ${state.handUsed}<br>
+    <strong>Signing duration:</strong> ${duration}s
+  `;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+// ─── DOWNLOAD SIGNATURE IMAGE ONLY (NO TEXT) ─────────────
+function downloadSignatureImage() {
+  const name = document.getElementById('fieldName').value.trim();
+  
+  const signatureImageContent = `
+    <div style="text-align: center; padding: 20px;">
+      <img src="${state.sigDataUrl}" style="max-width: 100%; height: auto;">
+    </div>
+  `;
+  
+  const element = document.createElement('div');
+  element.innerHTML = signatureImageContent;
+  
+  const opt = {
+    margin: 5,
+    filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+  
+  html2pdf().set(opt).from(element).save();
+  
+  // Show Sign Another button after download
+  setTimeout(() => {
+    document.getElementById('signAnotherBtn').style.display = 'block';
+  }, 500);
+}
+
+// ─── DOWNLOAD SIGNATURE ONLY PDF ─────────────────────────
+function downloadSignatureOnlyPDF(name, email, company, date) {
+  const hand = state.handUsed;
+  const submitTime = new Date().toLocaleString();
+  
+  const signatureOnlyContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; text-align: center;">
+      <!-- Header -->
+      <div style="margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
+        <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 24px;">Digital Signature</h1>
+        <p style="color: #8b8b99; margin: 5px 0; font-size: 12px;">AirSign - Ananta Labs</p>
+      </div>
+      
+      <!-- Signature Box -->
+      <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 30px; background: #f5f3ee; margin-bottom: 30px;">
+        <img src="${state.sigDataUrl}" style="max-width: 100%; max-height: 300px; display: block; margin: 0 auto;">
+      </div>
+      
+      <!-- Signature Info -->
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 30px;">
+        <tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;"><strong>Signer Name:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;">${name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;"><strong>Email:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;">${email}</td>
+        </tr>
+        ${company ? `<tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;"><strong>Organization:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;">${company}</td>
+        </tr>` : ''}
+        <tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;"><strong>Date:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;">${date}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;"><strong>Signed At:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;">${submitTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #8b8b99; text-align: left;\"><strong>Hand Used:</strong></td>
+          <td style="padding: 8px 0; color: #0a0a0f; text-align: right;\">${hand}</td>
+        </tr>
+      </table>
+      
+      <!-- Footer -->
+      <div style="border-top: 1px solid #dddbd4; padding-top: 20px; text-align: center; font-size: 11px; color: #8b8b99;\">
+        <p style=\"margin: 5px 0; color: #16a34a;\">✓ This signature is legally binding</p>
+        <p style=\"margin: 5px 0;\">Generated by AirSign • Ananta Labs</p>
+      </div>
+    </div>
+  `;
+  
+  const element = document.createElement('div');
+  element.innerHTML = signatureOnlyContent;
+  
+  const opt = {
+    margin: 10,
+    filename: `AirSign_Signature_${name.replace(/\\s+/g, '_')}_${new Date().getTime()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+  
+  html2pdf().set(opt).from(element).save();
+}
+
+// ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
+function downloadPDF() {
+  const name = document.getElementById('fieldName').value.trim();
+  const email = document.getElementById('fieldEmail').value.trim();
+  const company = document.getElementById('fieldCompany').value.trim();
+  const date = document.getElementById('fieldDate').value;
+  const duration = state.sigStartTime ? Math.round((Date.now() - state.sigStartTime) / 1000) : 0;
+  const submitTime = new Date().toLocaleString();
+  const hand = state.handUsed;
+  const strokes = state.totalStrokes;
+  
+  // Create HTML content for PDF
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
+        <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 28px;">AirSign Digital Agreement</h1>
+        <p style="color: #8b8b99; margin: 5px 0; font-size: 14px;">Digitally Signed Document</p>
+      </div>
+      
+      <!-- Document Info -->
+      <div style="background: #f5f3ee; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signer:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Email:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${email}</td>
+          </tr>
+          ${company ? `<tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Organization:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${company}</td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Document Date:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${date}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signed at:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${submitTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #8b8b99;"><strong>Signature Time:</strong></td>
+            <td style="padding: 8px 0; color: #0a0a0f;">${new Date().toISOString()}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Signature Box -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <p style="color: #8b8b99; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Digital Signature</p>
+        <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 20px; background: #fff;">
+          <img src="${state.sigDataUrl}" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+        </div>
+      </div>
+      
+      <!-- Signature Details -->
+      <div style="background: #f5f3ee; padding: 20px; border-radius: 8px; margin-bottom: 30px; font-size: 13px;">
+        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Hand Used:</strong> <span style="color: #2563ff;">${hand}</span></p>
+        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Signing Duration:</strong> <span style="color: #2563ff;">${duration} seconds</span></p>
+        <p style="margin: 8px 0; color: #0a0a0f;"><strong>Total Strokes:</strong> <span style="color: #2563ff;">${strokes}</span></p>
+      </div>
+      
+      <!-- Terms -->
+      <div style="margin-bottom: 30px; border-left: 4px solid #2563ff; padding-left: 20px;">
+        <h3 style="color: #0a0a0f; margin: 0 0 10px 0; font-size: 14px;">Terms of Agreement</h3>
+        <p style="color: #8b8b99; font-size: 12px; line-height: 1.6; margin: 0;">
+          By signing this document, you confirm that all information provided is accurate and complete. You agree to the terms and conditions of this service agreement and acknowledge that your air-captured signature constitutes a legally binding digital signature under applicable electronic signature laws.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="text-align: center; border-top: 1px solid #dddbd4; padding-top: 20px; color: #8b8b99; font-size: 11px;">
+        <p style="margin: 5px 0;">Document digitally signed and verified</p>
+        <p style="margin: 5px 0;">Generated by AirSign • Secure Digital Signature System</p>
+        <p style="margin: 5px 0; color: #16a34a;">✓ This signature is legally binding</p>
+        <p style="margin: 10px 0 0 0; font-size: 10px; color: #2563ff; font-weight: bold;">AirSign - Ananta Labs</p>
+      </div>
+    </div>
+  `;
+  
+  // Generate PDF
+  const element = document.createElement('div');
+  element.innerHTML = htmlContent;
+  
+  const opt = {
+    margin: 10,
+    filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+  
+  html2pdf().set(opt).from(element).save();
+  
+  // Show Sign Another button after PDF download starts
+  setTimeout(() => {
+    document.getElementById('signAnotherBtn').style.display = 'block';
+  }, 500);
+}
+function restartApp() {
+  document.getElementById('successOverlay').classList.remove('show');
+  document.getElementById('fieldName').value = '';
+  document.getElementById('fieldEmail').value = '';
+  document.getElementById('fieldCompany').value = '';
+  // Keep date as today in Indian format
+  const today = new Date();
+  const indianDate = String(today.getDate()).padStart(2, '0') + '/' + 
+                     String(today.getMonth() + 1).padStart(2, '0') + '/' + 
+                     today.getFullYear();
+  document.getElementById('fieldDate').value = indianDate;
+  document.getElementById('agreeCheck').checked = false;
+  document.getElementById('signAnotherBtn').style.display = 'none';
+  clearSignature();
+}
+
+// ─── START CAMERA ─────────────────────────────────────────
+async function startCamera() {
+  const permBtn = document.querySelector('.perm-btn');
+  const permScreen = document.getElementById('permScreen');
+  const permSub = document.querySelector('.perm-sub');
+  
+  // Show loading state
+  permBtn.textContent = 'Requesting camera access...';
+  permBtn.disabled = true;
+
+  const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  });
+
+  hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.6,
+  });
+
+  hands.onResults(onResults);
+
+  // Optimize camera resolution for mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isLandscape = window.innerWidth > window.innerHeight;
+  
+  let cameraWidth = 640;
+  let cameraHeight = 480;
+  
+  if (isMobile) {
+    if (isLandscape) {
+      cameraWidth = 480;
+      cameraHeight = 360;
+    } else {
+      cameraWidth = 360;
+      cameraHeight = 480;
+    }
+  }
+
+  const camera = new Camera(videoEl, {
+    onFrame: async () => {
+      await hands.send({ image: videoEl });
+    },
+    width: cameraWidth,
+    height: cameraHeight,
+  });
+
+  try {
+    permSub.textContent = 'Starting camera...';
+    
+    // Request camera permission explicitly for better mobile support
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: 'user',
+        width: { ideal: cameraWidth },
+        height: { ideal: cameraHeight }
+      } 
+    });
+    
+    // Stop the test stream
+    stream.getTracks().forEach(track => track.stop());
+    
+    permSub.textContent = 'Camera ready. Initializing...';
+    
+    await camera.start();
+    
+    permScreen.style.display = 'none';
+    videoEl.style.opacity = '1';
+    resizeCanvases();
+    setStatus('active', 'Camera active');
+    overlayText.textContent = 'Raise your index finger to sign';
+
+    // Pulse sig box to guide user
+    setTimeout(() => sigBox.classList.add('active'), 1000);
+  } catch (err) {
+    console.error('Camera error:', err);
+    
+    permBtn.textContent = 'Allow Camera & Begin';
+    permBtn.disabled = false;
+    
+    if (err.name === 'NotAllowedError') {
+      permSub.textContent = '❌ Camera access was denied. Please allow camera access in your browser settings and try again.';
+    } else if (err.name === 'NotFoundError') {
+      permSub.textContent = '❌ No camera found. Please ensure your device has a camera.';
+    } else if (err.name === 'NotReadableError') {
+      permSub.textContent = '❌ Camera is busy. Please close other apps using the camera and try again.';
+    } else {
+      permSub.textContent = '❌ Camera error: ' + err.message + '. Please refresh and try again.';
+    }
+  }
+}
+</script>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a class="footer-link" onclick="openModal('privacyModal')">Privacy Policy</a>
+    <a class="footer-link" onclick="openModal('termsModal')">Terms & Conditions</a>
+    <a class="footer-link" onclick="openModal('howtoModal')">How to Use</a>
+    <a class="footer-link" onclick="openModal('contactModal')">Contact</a>
+  </div>
+  <div class="footer-credit">© 2026 AirSign by Ananta Labs. All rights reserved.</div>
+</footer>
+
+<!-- PRIVACY POLICY MODAL -->
+<div id="privacyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Privacy Policy</div>
+      <button class="modal-close" onclick="closeModal('privacyModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>Data Collection & Usage</h3>
+      <p>AirSign collects minimal personal information necessary for document signing:</p>
+      <ul>
+        <li><strong>Name & Email:</strong> For signature identification</li>
+        <li><strong>Signature Image:</strong> Stored locally on your device</li>
+        <li><strong>Camera Feed:</strong> Processed in real-time for hand detection, never stored</li>
+        <li><strong>Timestamps:</strong> For legal record-keeping</li>
+      </ul>
+
+      <h3>Data Protection</h3>
+      <p>Your data is protected through:</p>
+      <ul>
+        <li>Client-side processing (no server uploads)</li>
+        <li>Secure PDF generation with encryption</li>
+        <li>No third-party data sharing</li>
+        <li>HTTPS-only transmission</li>
+      </ul>
+
+      <h3>Camera & Permissions</h3>
+      <p>AirSign only accesses your camera when explicitly authorized. You can revoke permissions at any time through your browser settings.</p>
+
+      <h3>Data Retention</h3>
+      <p>Downloaded PDFs are stored on your device. We retain no copies of your signatures or personal data on our servers.</p>
+
+      <h3>Contact</h3>
+      <p>For privacy concerns, please contact: <strong>work.anantalabs@gmail.com</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS & CONDITIONS MODAL -->
+<div id="termsModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Terms & Conditions</div>
+      <button class="modal-close" onclick="closeModal('termsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>1. Acceptance of Terms</h3>
+      <p>By using AirSign, you agree to these terms and conditions. If you do not agree, please do not use this service.</p>
+
+      <h3>2. Legal Binding of Signatures</h3>
+      <p>Your air-captured signature constitutes a legally binding digital signature under applicable electronic signature laws including the E-SIGN Act and UETA (Uniform Electronic Transactions Act).</p>
+
+      <h3>3. User Responsibilities</h3>
+      <ul>
+        <li>You are responsible for the accuracy of information provided</li>
+        <li>You must have authority to sign documents</li>
+        <li>You agree to keep your credentials secure</li>
+        <li>You certify that all information is truthful and complete</li>
+      </ul>
+
+      <h3>4. Limitation of Liability</h3>
+      <p>AirSign is provided "as is" without warranties. We are not liable for damages arising from the use or inability to use this service.</p>
+
+      <h3>5. Intellectual Property</h3>
+      <p>AirSign technology is owned by Ananta Labs. You may not reverse-engineer, copy, or redistribute the software.</p>
+
+      <h3>6. Document Authenticity</h3>
+      <p>You guarantee that:</p>
+      <ul>
+        <li>You have read and understand all documents before signing</li>
+        <li>You agree to all terms presented</li>
+        <li>Your signature is made willingly and voluntarily</li>
+      </ul>
+
+      <h3>7. Termination</h3>
+      <p>Ananta Labs reserves the right to terminate service to users who violate these terms.</p>
+
+      <h3>8. Governing Law</h3>
+      <p>These terms are governed by applicable international electronic signature laws.</p>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO USE MODAL -->
+<div id="howtoModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">How to Use AirSign</div>
+      <button class="modal-close" onclick="closeModal('howtoModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>Step 1: Allow Camera Access</h3>
+      <p>Click "Allow Camera & Begin" to grant AirSign permission to access your webcam. Your camera feed is only used for hand detection and is never stored.</p>
+
+      <h3>Step 2: Fill Your Details</h3>
+      <p>Enter your:</p>
+      <ul>
+        <li><strong>Full Name:</strong> Your legal name as it appears on documents</li>
+        <li><strong>Email:</strong> Valid email address for record-keeping</li>
+        <li><strong>Company (Optional):</strong> Your organization name</li>
+        <li><strong>Date:</strong> Automatically set to today (cannot be changed)</li>
+      </ul>
+
+      <h3>Step 3: Read & Agree to Terms</h3>
+      <p>Read the Terms of Agreement carefully and check the checkbox to confirm you agree.</p>
+
+      <h3>Step 4: Sign Your Document</h3>
+      <p><strong>Left Panel (Camera):</strong></p>
+      <ul>
+        <li>Click "Start Signature" to begin signing</li>
+        <li>Raise your index finger (☝️) or pinch your thumb & index to draw</li>
+        <li>Make a fist (✊) to pause drawing temporarily</li>
+        <li>Click "Pause" button to stop, "Resume" to continue</li>
+        <li>Open both hands (🖐️) to clear and start over</li>
+      </ul>
+
+      <h3>Step 5: Capture Your Signature</h3>
+      <p>When satisfied with your signature, click "✓ Use Signature" to capture it.</p>
+
+      <h3>Step 6: Submit & Download</h3>
+      <ul>
+        <li>Click "Submit Signed Document" to complete</li>
+        <li>Choose download option:
+          <ul>
+            <li>📥 <strong>Download Full PDF:</strong> Complete document with all details</li>
+            <li>✍️ <strong>Signature Only:</strong> Just your signature image (no text)</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Step 7: Sign Another</h3>
+      <p>After downloading, click "↻ Sign Another" to sign a new document.</p>
+
+      <h3>Tips for Best Results</h3>
+      <ul>
+        <li>Use good lighting and clear background</li>
+        <li>Keep your hand steady and within camera frame</li>
+        <li>Use smooth, deliberate movements</li>
+        <li>Practice makes perfect - refine your digital signature</li>
+        <li>Save your PDFs securely for legal records</li>
+      </ul>
+
+      <h3>Troubleshooting</h3>
+      <ul>
+        <li><strong>Camera not detected?</strong> Check browser permissions and camera connectivity</li>
+        <li><strong>Hand not detected?</strong> Ensure good lighting and keep hand in frame</li>
+        <li><strong>Signature skipping?</strong> Move your finger slower or use steady pinching motion</li>
+        <li><strong>Download not working?</strong> Check your browser's download settings</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div id="contactModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Contact Us</div>
+      <button class="modal-close" onclick="closeModal('contactModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>Get in Touch</h3>
+      <p>Have questions about AirSign or need support? We'd love to hear from you!</p>
+
+      <h3>Email</h3>
+      <p>
+        <strong>For all inquiries:</strong><br>
+        <a href="https://mail.google.com/mail/u/0/?fs=1&to=work.anantalabs@gmail.com&tf=cm" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">work.anantalabs@gmail.com</a>
+      </p>
+
+      <h3>Support</h3>
+      <p>For technical support, feature requests, or bug reports, please email us with details about your inquiry. Our team typically responds within 24-48 business hours.</p>
+
+      <h3>What We Can Help With</h3>
+      <ul>
+        <li>Technical issues and troubleshooting</li>
+        <li>Feature requests and suggestions</li>
+        <li>Partnership opportunities</li>
+        <li>Privacy and security concerns</li>
+        <li>General inquiries about AirSign</li>
+      </ul>
+
+      <h3>About Ananta Labs</h3>
+      <p>Ananta Labs is dedicated to bringing innovative digital solutions. AirSign represents our commitment to security, accessibility, and user experience.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Modal functions
+function openModal(modalId) {
+  document.getElementById(modalId).classList.add('show');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('show');
+}
+
+// Close modal when clicking outside content
+window.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('show');
+  }
+});
+</script>
+
+</html>
