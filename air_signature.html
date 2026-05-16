@@ -1578,31 +1578,42 @@ function submitForm() {
 // ─── DOWNLOAD SIGNATURE IMAGE ONLY (NO TEXT) ─────────────
 function downloadSignatureImage() {
   const name = document.getElementById('fieldName').value.trim();
+  const signatureImage = new Image();
+  signatureImage.src = state.sigDataUrl;
   
-  const signatureImageContent = `
-    <div style="text-align: center; padding: 20px;">
-      <img src="${state.sigDataUrl}" style="max-width: 100%; height: auto;">
-    </div>
-  `;
-  
-  const safeContent = `
-    <div style="width: 1024px; background: white; color: black; font-family: sans-serif; padding: 40px; text-align: center;">
-      <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 30px; background: #f5f3ee;">
-        <img src="${state.sigDataUrl}" style="max-width: 100%; height: auto;">
+  signatureImage.onload = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = signatureImage.width;
+    canvas.height = signatureImage.height;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(signatureImage, 0, 0);
+    const finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+    const safeContent = `
+      <div style="width: 800px; background: white; padding: 50px; text-align: center; border: 1px solid #eee;">
+        <h2 style="color: #0a0a0f; margin-bottom: 30px;">Digital Signature Image</h2>
+        <div style="border: 2px solid #2563ff; padding: 20px; background: #fff; display: inline-block;">
+          <img src="${finalDataUrl}" style="width: 600px; height: auto;">
+        </div>
+        <div style="margin-top: 40px; color: #8b8b99; font-size: 14px;">
+          Signer: ${name}<br>
+          Captured via AirSign
+        </div>
       </div>
-      <p style="margin-top: 20px; font-size: 14px; color: #8b8b99;">&copy; 2026 AirSign by Ananta Labs</p>
-    </div>
-  `;
-  
-  const opt = {
-    margin: 10,
-    filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    `;
+
+    const opt = {
+      margin: 10,
+      filename: `Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 1.5, useCORS: true, windowWidth: 1024 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+
+    html2pdf().set(opt).from(safeContent).save();
   };
-  
-  html2pdf().set(opt).from(safeContent).save();
   
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
@@ -1663,17 +1674,22 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
     </div>
   `;
   
-  const safeContent = `<div style="width: 1024px; background: white; color: black;">${signatureOnlyContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+  const signatureImage = new Image();
+  signatureImage.src = state.sigDataUrl;
   
-  const opt = {
-    margin: 10,
-    filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  signatureImage.onload = () => {
+    const safeContent = `<div style="width: 1024px; background: white; color: black; padding: 40px;">${signatureOnlyContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+    
+    const opt = {
+      margin: 10,
+      filename: `AirSign_Signature_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+
+    html2pdf().set(opt).from(safeContent).save();
   };
-  
-  html2pdf().set(opt).from(safeContent).save();
 }
 
 // ─── GENERATE & DOWNLOAD PDF ─────────────────────────────
@@ -1760,17 +1776,22 @@ function downloadPDF() {
   `;
   
   // Generate PDF
-  const safeContent = `<div style="width: 1024px; background: white; color: black;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+  const signatureImage = new Image();
+  signatureImage.src = state.sigDataUrl;
   
-  const opt = {
-    margin: 10,
-    filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  signatureImage.onload = () => {
+    const safeContent = `<div style="width: 1024px; background: white; color: black; padding: 40px;">${htmlContent.replace('✓', '&#10003;').replace('•', '&bull;')}</div>`;
+    
+    const opt = {
+      margin: 10,
+      filename: `AirSign_${name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 1.5, windowWidth: 1024, useCORS: true },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+
+    html2pdf().set(opt).from(safeContent).save();
   };
-  
-  html2pdf().set(opt).from(safeContent).save();
   
   setTimeout(() => {
     document.getElementById('signAnotherBtn').style.display = 'block';
