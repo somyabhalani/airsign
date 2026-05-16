@@ -24,7 +24,9 @@
   }
 
   html, body {
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     background: var(--paper);
     color: var(--ink);
     font-family: 'DM Sans', sans-serif;
@@ -107,6 +109,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     min-height: 100vh;
+    flex: 1;
     padding-top: 56px;
   }
 
@@ -1504,10 +1507,17 @@ function captureSignature() {
   setStatus('active', 'Signature captured ✓');
   overlayText.textContent = '✓ Signature captured!';
   
+  // Scroll to form on mobile
+  if (window.innerWidth <= 768) {
+    setTimeout(() => {
+      document.getElementById('sigBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }
+
   // Show form modal popup
   setTimeout(() => {
     openFormModal();
-  }, 300);
+  }, 1000);
 }
 
 // ─── CLEAR ───────────────────────────────────────────────
@@ -1636,15 +1646,15 @@ function downloadSignatureOnlyPDF(name, email, company, date) {
   const submitTime = new Date().toLocaleString();
   
   const signatureOnlyContent = `
-    <div style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: white;">
+    <div style="font-family: Arial, sans-serif; padding: 25px; text-align: center; background: white;">
       <!-- Header -->
-      <div style="margin-bottom: 40px; border-bottom: 2px solid #2563ff; padding-bottom: 20px;">
+      <div style="margin-bottom: 25px; border-bottom: 2px solid #2563ff; padding-bottom: 15px;">
         <h1 style="color: #0a0a0f; margin: 0 0 5px 0; font-size: 24px;">Digital Signature</h1>
         <p style="color: #8b8b99; margin: 5px 0; font-size: 12px;">AirSign - Ananta Labs</p>
       </div>
       
       <!-- Signature Box -->
-      <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 30px; background: #f5f3ee; margin-bottom: 30px;">
+      <div style="border: 2px solid #2563ff; border-radius: 8px; padding: 20px; background: #f5f3ee; margin-bottom: 20px;">
         <img src="${state.sigDataUrl}" style="max-width: 100%; max-height: 300px; display: block; margin: 0 auto;">
       </div>
       
