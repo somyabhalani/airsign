@@ -1,0 +1,28 @@
+name: Save Traffic Stats
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs automatically every Sunday at midnight UTC
+  workflow_dispatch: # Allows you to trigger this manually anytime
+
+jobs:
+  backup-traffic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Traffic Branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'traffic' # Pulls down the traffic branch
+
+      - name: Fetch Repository Traffic Data
+        uses: sangonzal/repository-traffic-action@v0.1.6
+        env:
+          TRAFFIC_ACTION_TOKEN: ${{ secrets.TRAFFIC_ACTION_TOKEN }}
+
+      - name: Commit and Push Data
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: GitHub Action
+          author_email: actions@github.com
+          message: "Automated traffic data update"
